@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anatomy 深度解析 · 15章官方原版等轴测动态 B-Roll 演播系统</title>
+    <style>
+      html, body {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #111110;
+        color: #d6d5ce;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pre-loader-cover {
+        position: fixed;
+        inset: 0;
+        background: #111110;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        z-index: 99999;
+      }
+      .pre-dial-wrap {
+        position: relative;
+        width: 72px;
+        height: 72px;
+      }
+      .pre-dial-glow {
+        position: absolute;
+        inset: -14px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(229, 169, 60, 0.28) 0%, transparent 70%);
+        animation: pre-glow-pulse 1.8s ease-in-out infinite;
+      }
+      .pre-dial-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px dashed rgba(243, 242, 237, 0.24);
+      }
+      .pre-dial-spinner {
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: #e5a93c;
+        border-right-color: rgba(229, 169, 60, 0.45);
+        animation: pre-spin 0.85s linear infinite;
+      }
+      @keyframes pre-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes pre-glow-pulse {
+        0%, 100% { transform: scale(0.9); opacity: 0.55; }
+        50% { transform: scale(1.15); opacity: 1; }
+      }
+      .pre-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .pre-badge {
+        font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        color: #e5a93c;
+        font-weight: 600;
+      }
+      .pre-message {
+        font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: #94938b;
+      }
+      .pre-track {
+        width: 180px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .pre-bar {
+        height: 100%;
+        width: 40%;
+        background: #e5a93c;
+        border-radius: 2px;
+        animation: pre-scan 1.2s ease-in-out infinite;
+      }
+      @keyframes pre-scan {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(180%); }
+        100% { transform: translateX(380%); }
+      }
+    </style>
+  </head>
+  <body class="iso" data-theme="dark">
+    <div id="root">
+      <div class="pre-loader-cover">
+        <div class="pre-dial-wrap">
+          <div class="pre-dial-glow"></div>
+          <div class="pre-dial-ring"></div>
+          <div class="pre-dial-spinner"></div>
+        </div>
+        <div class="pre-meta">
+          <div class="pre-badge">ANATOMY · B-ROLL PLAYER</div>
+          <div class="pre-message">INITIALIZING SYSTEM...</div>
+        </div>
+        <div class="pre-track">
+          <div class="pre-bar"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

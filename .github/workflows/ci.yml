@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: anatomy-ci
+  cancel-in-progress: false
+
+jobs:
+  test-and-build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: |
+          npm ci || npm install
+
+      - name: Run Tests
+        run: |
+          npm test
+
+      - name: Build Static Site
+        run: |
+          npm run build
+
+      - name: Verify Build Artifacts
+        run: |
+          test -f dist/index.html
+          test -f dist/broll-player.html
+          test -d dist/assets
+          ls dist/assets/watch-*.js
+          test -f dist/assets/raptor-engine.html
+          echo "Vite code-split build artifacts verified successfully."
+
+      - name: Dispatch Event
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          DISPATCH_TOKEN: ${{ secrets.OPS_DISPATCH_TOKEN }}
+          DISPATCH_TARGET: ${{ secrets.OPS_DISPATCH_REPO }}
+        run: |
+          if [ -n "$DISPATCH_TOKEN" ] && [ -n "$DISPATCH_TARGET" ]; then
+            curl -fsSL -X POST \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: token $DISPATCH_TOKEN" \
+              "https://api.github.com/repos/${DISPATCH_TARGET}/dispatches" \
+              -d '{"event_type": "deploy-anatomy", "client_payload": {"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}}' > /dev/null 2>&1 || true
+            echo "Dispatch event triggered."
+          fi

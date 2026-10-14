@@ -1,0 +1,21 @@
+# Node modules
+node_modules/
+
+# Production build output (static artifacts deployed via CI/CD)
+dist/
+
+# Exported media and rendering outputs (videos and screenshots)
+output/
+
+# macOS
+.DS_Store
+
+# Temporary agent workspaces
+.superpowers/
+
+# Logs and local env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
