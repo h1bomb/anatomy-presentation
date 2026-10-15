@@ -1,7 +1,8 @@
 import React, { Suspense, useEffect, useRef, useMemo } from "react";
-import { getFigureComponent } from "../machines/figure-loader";
-import { StageSkeleton } from "./LoadingScreen";
-import type { Beat, Chapter } from "../types";
+import { getFigureComponent } from "../machines/figure-loader.tsx";
+import { StageSkeleton } from "./LoadingScreen.tsx";
+import type { Beat, Chapter, Language, Theme } from "../types.ts";
+import { t, tList } from "../data/chapters.ts";
 
 interface IsometricStageProps {
   chapter: Chapter;
@@ -12,6 +13,8 @@ interface IsometricStageProps {
   figureKey: string;
   isExportMode?: boolean;
   dtMs?: number;
+  theme?: Theme;
+  lang?: Language;
 }
 
 export const IsometricStage: React.FC<IsometricStageProps> = ({
@@ -23,6 +26,8 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
   figureKey,
   isExportMode = false,
   dtMs = 33.333,
+  theme = "dark",
+  lang = "zh",
 }) => {
   const rigRef = useRef<HTMLDivElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
@@ -48,6 +53,33 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
     }
     return `translate(${driftX.toFixed(1)}px, ${driftY.toFixed(1)}px) scale(1.03)`;
   }, [chapter.id, beatIndex, clampedTime]);
+
+  const figureTokens = useMemo(() => {
+    if (theme === "light") {
+      return {
+        "--anatomy-page": "#f5f4ef",
+        "--anatomy-card": "#ffffff",
+        "--anatomy-paper": "#ffffff",
+        "--anatomy-top": "#ffffff",
+        "--anatomy-face": "#f0efe8",
+        "--anatomy-hi": "#111110",
+        "--anatomy-mid": "#5c5b55",
+        "--anatomy-lo": "#8c8a82",
+        "--anatomy-faint": "#dcd9ce",
+      };
+    }
+    return {
+      "--anatomy-page": "#111110",
+      "--anatomy-card": "#111110",
+      "--anatomy-paper": "#111110",
+      "--anatomy-face": "#1d1d1b",
+      "--anatomy-top": "#21211e",
+      "--anatomy-hi": "#d8d7d0",
+      "--anatomy-mid": "#73726b",
+      "--anatomy-lo": "#43423d",
+      "--anatomy-faint": "#2b2a27",
+    };
+  }, [theme]);
 
   // Keyboard and stage cue driver
   useEffect(() => {
@@ -89,14 +121,17 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
     }
   }, [figureKey, activeBeat.stageCue, clampedTime, beatProgress, dtMs, isIframe, isExportMode]);
 
+  const metricsText = tList(activeBeat.metrics, lang).join(" · ");
+  const subtitleText = t(chapter.subtitle, lang);
+
   return (
     <section className="isometric-stage-wrap" aria-label="Anatomy Isometric Animation Stage">
       <div className="stage-hud-overlay">
         <div className="stage-cue-pill">
-          {`OFFICIAL FIGURE · ${figureKey.replace("iframe:", "").replace(".html", "")} · ${activeBeat.stageCue}`}
+          {`FIGURE · ${figureKey.replace("iframe:", "").replace(".html", "").toUpperCase()} · ${activeBeat.stageCue}`}
         </div>
         <div className="stage-spec-box">
-          {`${chapter.subtitle} · ${activeBeat.metrics.join(" · ")}`}
+          {`${subtitleText} · ${metricsText}`}
         </div>
       </div>
 
@@ -117,11 +152,8 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
             {FigureComp ? (
               <Suspense fallback={<StageSkeleton label={`MOUNTING [${figureKey.toUpperCase()}]...`} />}>
                 <FigureComp
-                  theme="dark"
-                  tokens={{
-                    "--anatomy-card": "#111110",
-                    "--anatomy-paper": "#111110",
-                  }}
+                  theme={theme}
+                  tokens={figureTokens}
                   style={{ width: "920px", maxWidth: "920px", margin: "0 auto", display: "block" }}
                 />
               </Suspense>

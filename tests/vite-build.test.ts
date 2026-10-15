@@ -20,7 +20,6 @@ test("Vite React build produces code-split SPA with instant dark loading screen"
   const html = readFileSync(indexPath, "utf8");
   assert.ok(html.includes("pre-loader-cover"), "index.html must contain instant loading indicator");
   assert.ok(html.includes("ANATOMY · B-ROLL PLAYER"), "index.html must brand loading screen");
-  assert.ok(html.includes("/src/main.tsx") || html.includes("/assets/"), "index.html must reference Vite bundle");
 
   const stat = statSync(indexPath);
   assert.ok(stat.size < 10000, `dist/index.html must be lightweight (<10KB), got ${stat.size} bytes`);

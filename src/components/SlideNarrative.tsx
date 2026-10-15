@@ -1,14 +1,16 @@
 import React from "react";
-import type { Beat, BeatState } from "../types";
+import type { Beat, BeatState, Bilingual, BilingualList, Language } from "../types.ts";
+import { t, tList } from "../data/chapters.ts";
 
 interface SlideNarrativeProps {
-  thesis: string;
+  thesis: Bilingual;
   beats: Beat[];
   beatIndex: number;
   beatProgress: number;
   clampedTime: number;
-  takeaway: string;
+  takeaway: Bilingual;
   isExportMode?: boolean;
+  lang?: Language;
   onSelectBeat?: (index: number) => void;
 }
 
@@ -20,13 +22,18 @@ export const SlideNarrative: React.FC<SlideNarrativeProps> = ({
   clampedTime,
   takeaway,
   isExportMode = false,
+  lang = "zh",
   onSelectBeat,
 }) => {
+  const isZh = lang === "zh";
+
   return (
-    <aside className="slide-narrative-col">
+    <aside className="slide-narrative-col" aria-label="Slide Narrative">
       <div className="thesis-banner">
-        <div className="thesis-tag">CHAPTER THESIS · 核心命题</div>
-        <div className="thesis-text">{thesis}</div>
+        <div className="thesis-tag">
+          {isZh ? "CHAPTER THESIS · 核心命题" : "CHAPTER THESIS · CORE PROPOSITION"}
+        </div>
+        <div className="thesis-text">{t(thesis, lang)}</div>
       </div>
 
       <div className="beat-cards-stack">
@@ -47,6 +54,11 @@ export const SlideNarrative: React.FC<SlideNarrativeProps> = ({
             }
           }
 
+          const labelStr = t(b.label, lang);
+          const headlineStr = t(b.headline, lang);
+          const detailStr = t(b.detail, lang);
+          const metricsArr = tList(b.metrics, lang);
+
           return (
             <article
               key={idx}
@@ -54,15 +66,16 @@ export const SlideNarrative: React.FC<SlideNarrativeProps> = ({
               data-state={state}
               style={inlineStyle}
               onClick={() => onSelectBeat?.(idx)}
+              title={isZh ? `点击跳转到第 ${idx + 1} 节拍` : `Jump to Beat 0${idx + 1}`}
             >
               <div className="beat-card-header">
-                <span className="beat-time-badge">{`BEAT 0${idx + 1} · ${b.label}`}</span>
+                <span className="beat-time-badge">{`BEAT 0${idx + 1} · ${labelStr}`}</span>
                 <span className="beat-cue-tag">{`STAGE: ${b.stageCue}`}</span>
               </div>
-              <h2 className="beat-headline">{b.headline}</h2>
-              <p className="beat-detail">{b.detail}</p>
+              <h2 className="beat-headline">{headlineStr}</h2>
+              <p className="beat-detail">{detailStr}</p>
               <div className="beat-metrics">
-                {b.metrics.map((m, mIdx) => (
+                {metricsArr.map((m, mIdx) => (
                   <span key={mIdx} className="metric-chip">
                     {m}
                   </span>
@@ -74,8 +87,10 @@ export const SlideNarrative: React.FC<SlideNarrativeProps> = ({
       </div>
 
       <div className={`takeaway-plate ${beatIndex === 3 ? "is-highlighted" : ""}`}>
-        <span className="takeaway-label">KEY TAKEAWAY</span>
-        <span className="takeaway-content">{takeaway}</span>
+        <span className="takeaway-label">
+          {isZh ? "KEY TAKEAWAY · 核心结论" : "KEY TAKEAWAY · CORE LESSON"}
+        </span>
+        <span className="takeaway-content">{t(takeaway, lang)}</span>
       </div>
     </aside>
   );

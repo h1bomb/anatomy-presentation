@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildAllCustomMachines } from "../machines/custom-machines.mjs";
+import { buildAllCustomMachines } from "../src/machines/custom-machines.ts";
 
 const KEYS = [
   "watch-escapement",
@@ -14,7 +14,7 @@ const KEYS = [
   "taste-foundry",
 ];
 
-test("buildAllCustomMachines produces rich isometric SVGs with data-anim hooks for all 9 custom machines", () => {
+test("buildAllCustomMachines produces rich isometric SVGs with data-anim hooks for all 9 custom machines (TypeScript)", () => {
   const machines = buildAllCustomMachines();
   for (const key of KEYS) {
     assert.ok(machines[key], `missing machine ${key}`);

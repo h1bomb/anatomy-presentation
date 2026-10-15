@@ -1,9 +1,11 @@
+@import "tailwindcss";
+
 :root {
   --stage-scale: 1;
   --bg-canvas: #111110;
-  --bg-glass: rgba(22, 22, 20, 0.84);
-  --bg-card-active: rgba(32, 32, 29, 0.92);
-  --bg-card-idle: rgba(20, 20, 18, 0.66);
+  --bg-glass: rgba(22, 22, 20, 0.88);
+  --bg-card-active: rgba(32, 32, 29, 0.94);
+  --bg-card-idle: rgba(20, 20, 18, 0.7);
   --border-dim: rgba(255, 255, 255, 0.08);
   --border-mid: rgba(255, 255, 255, 0.16);
   --border-lit: rgba(243, 242, 237, 0.78);
@@ -16,6 +18,58 @@
   --text-lo: #5c5b55;
   --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --anatomy-page: #111110;
+  --anatomy-card: #111110;
+  --anatomy-paper: #111110;
+  --anatomy-face: #1d1d1b;
+  --anatomy-top: #21211e;
+  --anatomy-shade-0: #0e0e0d;
+  --anatomy-shade-1: #131311;
+  --anatomy-shade-2: #171715;
+  --anatomy-shade-3: #1c1c19;
+  --anatomy-lit-top: #2c2c28;
+  --anatomy-lit-shade: #22221f;
+  --anatomy-hi: #d8d7d0;
+  --anatomy-mid: #73726b;
+  --anatomy-lo: #43423d;
+  --anatomy-faint: #2b2a27;
+  --anatomy-lit: #f3f2ed;
+}
+
+:root[data-theme="light"],
+.theme-light {
+  --bg-canvas: #f5f4ef;
+  --bg-glass: rgba(255, 255, 255, 0.92);
+  --bg-card-active: rgba(255, 255, 255, 0.96);
+  --bg-card-idle: rgba(242, 241, 236, 0.75);
+  --border-dim: rgba(0, 0, 0, 0.08);
+  --border-mid: rgba(0, 0, 0, 0.16);
+  --border-lit: rgba(17, 17, 16, 0.82);
+  --accent-amber: #c4821c;
+  --accent-red: #c93b28;
+  --accent-green: #239b56;
+  --text-lit: #111110;
+  --text-hi: #2b2a27;
+  --text-mid: #686760;
+  --text-lo: #9e9d95;
+
+  --anatomy-page: #f5f4ef;
+  --anatomy-card: #ffffff;
+  --anatomy-paper: #ffffff;
+  --anatomy-face: #f0efe8;
+  --anatomy-top: #ffffff;
+  --anatomy-shade-0: #e2e0d6;
+  --anatomy-shade-1: #d8d6cb;
+  --anatomy-shade-2: #c8c5b8;
+  --anatomy-shade-3: #b4b0a2;
+  --anatomy-lit-top: #ffffff;
+  --anatomy-lit-shade: #dad8cc;
+  --anatomy-hi: #111110;
+  --anatomy-mid: #5c5b55;
+  --anatomy-lo: #8c8a82;
+  --anatomy-faint: #dcd9ce;
+  --anatomy-lit: #000000;
 }
 
 * {
@@ -38,25 +92,6 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-body.iso {
-  --anatomy-page: #111110;
-  --anatomy-card: #111110;
-  --anatomy-paper: #111110;
-  --anatomy-face: #1d1d1b;
-  --anatomy-top: #21211e;
-  --anatomy-shade-0: #0e0e0d;
-  --anatomy-shade-1: #131311;
-  --anatomy-shade-2: #171715;
-  --anatomy-shade-3: #1c1c19;
-  --anatomy-lit-top: #2c2c28;
-  --anatomy-lit-shade: #22221f;
-  --anatomy-hi: #d8d7d0;
-  --anatomy-mid: #73726b;
-  --anatomy-lo: #43423d;
-  --anatomy-faint: #2b2a27;
-  --anatomy-lit: #f3f2ed;
 }
 
 .broll-viewport {
@@ -526,20 +561,26 @@ body.iso {
 .teleprompter-hud {
   position: absolute;
   left: 56px;
-  right: 56px;
+  right: 780px;
   bottom: 22px;
   height: 64px;
-  background: rgba(15, 15, 14, 0.9);
+  background: var(--bg-glass);
   border: 1px solid var(--border-mid);
-  border-radius: 4px;
-  padding: 0 24px;
+  border-radius: 6px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 18px;
   z-index: 28;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+[data-theme="light"] .teleprompter-hud,
+.theme-light .teleprompter-hud {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .teleprompter-left {
@@ -553,10 +594,12 @@ body.iso {
 .voice-wave-badge {
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 700;
   color: var(--accent-amber);
+  background: rgba(229, 169, 60, 0.12);
   border: 1px solid rgba(229, 169, 60, 0.4);
-  padding: 4px 9px;
-  border-radius: 2px;
+  padding: 5px 10px;
+  border-radius: 4px;
   white-space: nowrap;
 }
 
@@ -584,19 +627,218 @@ body.iso {
 
 .controls-hint {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-mid);
-  white-space: nowrap;
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
-.key-cap {
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-dim);
-  border-radius: 2px;
-  color: var(--text-hi);
+.keycap-hint-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.key-cap-mech {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 7px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2e2e29 0%, #1c1c19 100%);
+  color: #f3f2ed;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 2px solid #0d0d0c;
+  box-shadow: 0 2px 0 #000000;
+}
+
+[data-theme="light"] .key-cap-mech,
+.theme-light .key-cap-mech {
+  background: linear-gradient(180deg, #ffffff 0%, #eae9e2 100%);
+  color: #111110;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 2px solid #b5b4ad;
+  box-shadow: 0 2px 0 #8f8e87;
+}
+
+.hint-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+
+/* 5. Bottom-Right Controls Dock */
+.controls-dock-station {
+  position: absolute;
+  right: 56px;
+  bottom: 22px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 35;
+}
+
+.dock-buttons-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+}
+
+[data-theme="light"] .dock-buttons-group,
+.theme-light .dock-buttons-group {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.dock-divider {
+  width: 1px;
+  height: 26px;
+  background: var(--border-dim);
+  margin: 0 3px;
+}
+
+.dock-status-line {
+  display: flex;
+  align-items: center;
+}
+
+.dock-ch-indicator {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-amber);
+  background: rgba(229, 169, 60, 0.12);
+  border: 1px solid rgba(229, 169, 60, 0.35);
+  border-radius: 6px;
+  padding: 10px 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+}
+
+/* Mechanical Keyboard Keycaps */
+.keycap-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 11px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.08s cubic-bezier(0.2, 0.8, 0.2, 1);
+  white-space: nowrap;
+
+  /* 3D Mechanical Keycap Profile */
+  background: linear-gradient(180deg, #2c2c27 0%, #1a1a17 100%);
+  color: #ecebe8;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 3px solid #0d0d0c;
+  box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.keycap-btn:hover {
+  background: linear-gradient(180deg, #383832 0%, #242420 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 3px 0 #000000, 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.keycap-btn:active,
+.keycap-btn.is-pressed {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+  box-shadow: 0 1px 0 #000000, 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.keycap-symbol {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.keycap-label {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.keycap-kbd {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 4px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  color: #a8a7a0;
+  margin-left: 2px;
+}
+
+.keycap-btn.is-active-accent {
+  background: linear-gradient(180deg, #e5a93c 0%, #b87c1e 100%);
+  color: #111110;
+  border-color: #ffd073;
+  border-bottom-color: #6b4507;
+  box-shadow: 0 3px 0 #3d2703, 0 4px 12px rgba(229, 169, 60, 0.4);
+}
+.keycap-btn.is-active-accent .keycap-kbd {
+  background: rgba(0, 0, 0, 0.25);
+  color: #111110;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.keycap-btn.is-light-active {
+  background: linear-gradient(180deg, #f5c542 0%, #d49a18 100%);
+  color: #111110;
+  border-color: #ffe685;
+  border-bottom-color: #7d590a;
+}
+
+/* Light Theme Keycaps */
+[data-theme="light"] .keycap-btn,
+.theme-light .keycap-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #ebe9e2 100%);
+  color: #1a1a18;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-bottom: 3px solid #b8b7ae;
+  box-shadow: 0 3px 0 #8c8b82, 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .keycap-btn:hover,
+.theme-light .keycap-btn:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f3ed 100%);
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .keycap-btn:active,
+.theme-light .keycap-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+  box-shadow: 0 1px 0 #8c8b82, 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .keycap-kbd,
+.theme-light .keycap-kbd {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #5c5b55;
 }
 
 /* Skeleton & Loading States */
@@ -739,3 +981,54 @@ body.iso {
   50% { transform: translateX(180%); }
   100% { transform: translateX(400%); }
 }
+
+/* Light Theme Component Overrides */
+[data-theme="light"] .top-bar,
+.theme-light .top-bar {
+  background: linear-gradient(180deg, rgba(245, 244, 239, 0.95) 0%, rgba(245, 244, 239, 0.75) 100%);
+  border-bottom-color: var(--border-dim);
+}
+
+[data-theme="light"] .fig-badge,
+.theme-light .fig-badge {
+  color: #ffffff;
+  background: #111110;
+}
+
+[data-theme="light"] .thesis-banner,
+.theme-light .thesis-banner {
+  background: linear-gradient(90deg, rgba(196, 130, 28, 0.12) 0%, rgba(255, 255, 255, 0.92) 100%);
+  border-color: var(--border-dim);
+  border-left: 3px solid var(--accent-amber);
+}
+
+[data-theme="light"] .beat-card[data-state="active"],
+.theme-light .beat-card[data-state="active"] {
+  box-shadow:
+    -4px 0 0 0 var(--accent-amber),
+    0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .beat-card[data-state="upcoming"],
+.theme-light .beat-card[data-state="upcoming"] {
+  opacity: 0.28;
+}
+
+[data-theme="light"] .takeaway-plate,
+.theme-light .takeaway-plate {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--border-mid);
+}
+
+[data-theme="light"] .stage-cue-pill,
+.theme-light .stage-cue-pill {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(196, 130, 28, 0.4);
+}
+
+[data-theme="light"] .stage-spec-box,
+.theme-light .stage-spec-box {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--border-dim);
+}
+

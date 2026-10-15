@@ -1,16 +1,16 @@
-import * as k from "../kit/iso-kit.mjs";
+import * as k from "../kit/iso-kit.ts";
 
 const W = 1120;
 const H = 860;
 
-const S = (paths, style) => k.solidSvg(paths, style);
-const L = (d, style) => k.lineSvg(d, style);
-const D = (points, style) => k.dotsSvg(points, style);
-const G = (children, extra) => k.groupSvg(children, extra);
+const S = (paths: k.SolidPaths, style?: any) => k.solidSvg(paths, style);
+const L = (d: string, style?: any) => k.lineSvg(d, style);
+const D = (points: k.Flat[], style?: any) => k.dotsSvg(points, style);
+const G = (children: string | string[], extra: any = {}) => k.groupSvg(children, extra);
 
-function makeBenchBase(P, plate = { x: -135, y: -88, w: 270, d: 176, r: 10 }, plateH = 12, footH = 6, labelText = "ANATOMY BENCH") {
-  const at = (pt) => k.iso(pt, P);
-  const byDepth = (pts) => [...pts].sort((a, b) => k.depthOf([a[0], a[1], 0], P) - k.depthOf([b[0], b[1], 0], P));
+function makeBenchBase(P: k.Projection, plate = { x: -135, y: -88, w: 270, d: 176, r: 10 }, plateH = 12, footH = 6, labelText = "ANATOMY BENCH") {
+  const at = (pt: k.Point3) => k.iso(pt, P);
+  const byDepth = (pts: k.Plane[]) => [...pts].sort((a, b) => k.depthOf([a[0], a[1], 0], P) - k.depthOf([b[0], b[1], 0], P));
   const out = [`<path class="iso-halo" d="${k.haloOf(plate, -plateH - footH, plateH, P)}"/>`];
 
   for (const [x, y] of byDepth(k.corners(plate, 20))) {
@@ -37,8 +37,8 @@ function makeBenchBase(P, plate = { x: -135, y: -88, w: 270, d: 176, r: 10 }, pl
   return out.join("");
 }
 
-function gearRing(cx, cy, rOuter, rInner, teeth, phaseRad = 0) {
-  const pts = [];
+function gearRing(cx: number, cy: number, rOuter: number, rInner: number, teeth: number, phaseRad: number = 0): k.Plane[] {
+  const pts: k.Plane[] = [];
   const total = teeth * 4;
   for (let i = 0; i < total; i++) {
     const a = phaseRad + (i / total) * Math.PI * 2;
@@ -52,7 +52,7 @@ function gearRing(cx, cy, rOuter, rInner, teeth, phaseRad = 0) {
 function buildWatchEscapement() {
   const plate = { x: -140, y: -92, w: 280, d: 184, r: 12 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 95)], W, H, { pad: 70, azimuth: 43, elevation: 32 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [vx, vy] = k.axisVector(P, [0, 1, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
@@ -160,7 +160,7 @@ function buildWatchEscapement() {
 function buildBoxToMachine() {
   const plate = { x: -142, y: -90, w: 284, d: 180, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 92)], W, H, { pad: 68, azimuth: 44, elevation: 30 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
@@ -226,7 +226,7 @@ function buildBoxToMachine() {
 function buildPipelineGantry() {
   const plate = { x: -155, y: -88, w: 310, d: 176, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 96)], W, H, { pad: 62, azimuth: 42, elevation: 30 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
@@ -303,7 +303,7 @@ function buildPipelineGantry() {
 function buildMetaphorCarousel() {
   const plate = { x: -148, y: -96, w: 296, d: 192, r: 12 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 88)], W, H, { pad: 64, azimuth: 45, elevation: 32 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
   const out = [makeBenchBase(P, plate, 12, 6, "5 METAPHORS · CH07")];
@@ -379,7 +379,7 @@ function buildMetaphorCarousel() {
 function buildCameraAudit() {
   const plate = { x: -145, y: -90, w: 290, d: 180, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 95)], W, H, { pad: 64, azimuth: 45, elevation: 30 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
@@ -443,14 +443,14 @@ function buildCameraAudit() {
   };
 }
 
-function postZCenter(y) {
+function postZCenter(y: number): number {
   return y;
 }
 
 function buildTimeTruth() {
   const plate = { x: -148, y: -88, w: 296, d: 176, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 98)], W, H, { pad: 64, azimuth: 43, elevation: 30 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
@@ -511,7 +511,7 @@ function buildTimeTruth() {
 function buildCodeNotPixels() {
   const plate = { x: -146, y: -90, w: 292, d: 180, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 92)], W, H, { pad: 64, azimuth: 44, elevation: 31 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
   const out = [makeBenchBase(P, plate, 12, 6, "CODE NOT PIXELS · CH12")];
@@ -566,7 +566,7 @@ function buildCodeNotPixels() {
 function buildStarCounter() {
   const plate = { x: -146, y: -90, w: 292, d: 180, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 94)], W, H, { pad: 64, azimuth: 43, elevation: 31 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 
@@ -622,7 +622,7 @@ function buildStarCounter() {
 function buildTasteFoundry() {
   const plate = { x: -148, y: -90, w: 296, d: 180, r: 10 };
   const P = k.fitProjection([...k.boxCorners(plate, -18, 98)], W, H, { pad: 64, azimuth: 44, elevation: 31 });
-  const at = (pt) => k.iso(pt, P);
+  const at = (pt: any) => k.iso(pt, P);
   const [ux, uy] = k.axisVector(P, [1, 0, 0]);
   const [zx, zy] = k.axisVector(P, [0, 0, 1]);
 

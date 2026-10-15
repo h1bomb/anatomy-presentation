@@ -1,14 +1,17 @@
 import React from "react";
+import type { Bilingual, Language } from "../types.ts";
+import { t } from "../data/chapters.ts";
 
 interface TopBarProps {
   chapterNumber: string;
-  chapterTitle: string;
-  chapterSubtitle: string;
+  chapterTitle: Bilingual;
+  chapterSubtitle: Bilingual;
   beatIndex: number;
-  beatLabel: string;
+  beatLabel: Bilingual;
   clampedTime: number;
   readout: string;
   beatProgress: number;
+  lang?: Language;
   onSelectBeat?: (index: number) => void;
 }
 
@@ -21,15 +24,20 @@ export const TopBar: React.FC<TopBarProps> = ({
   clampedTime,
   readout,
   beatProgress,
+  lang = "zh",
   onSelectBeat,
 }) => {
+  const displayTitle = t(chapterTitle, lang);
+  const displaySubtitle = t(chapterSubtitle, lang);
+  const displayBeatLabel = t(beatLabel, lang);
+
   return (
     <header className="top-bar">
       <div className="top-left">
         <span className="fig-badge">FIG. CH-{chapterNumber} / 15</span>
         <div className="chapter-titles">
-          <h1 className="chapter-main-title">{chapterTitle}</h1>
-          <div className="chapter-sub-title">{chapterSubtitle}</div>
+          <h1 className="chapter-main-title">{displayTitle}</h1>
+          <div className="chapter-sub-title">{displaySubtitle}</div>
         </div>
       </div>
 
@@ -44,6 +52,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 className="beat-seg"
                 onClick={() => onSelectBeat?.(idx)}
                 style={{ cursor: onSelectBeat ? "pointer" : "default" }}
+                title={`Beat 0${idx + 1}`}
               >
                 <div className="beat-seg-fill" style={{ width: `${fillPct.toFixed(1)}%` }} />
               </div>
@@ -51,7 +60,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           })}
         </div>
         <div className="timeline-meta">
-          <span>{`BEAT 0${beatIndex + 1} / 04 · ${beatLabel}`}</span>
+          <span>{`BEAT 0${beatIndex + 1} / 04 · ${displayBeatLabel}`}</span>
           <span>{`00:${clampedTime.toFixed(1).padStart(4, "0")} / 00:40.0`}</span>
         </div>
       </div>
