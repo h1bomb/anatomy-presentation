@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CHAPTERS, t, tList } from "../src/data/chapters.ts";
-import { resolveVoice, stopSpeech, playSpeech, unlockSpeechSynthesis } from "../src/utils/speech.ts";
+import { resolveVoice, stopSpeech, playSpeech, unlockSpeechSynthesis, playAudioChime } from "../src/utils/speech.ts";
 
 test("Every chapter has complete bilingual copy (Chinese & English)", () => {
   assert.equal(CHAPTERS.length, 15);
@@ -39,6 +39,10 @@ test("Every chapter has complete bilingual copy (Chinese & English)", () => {
 });
 
 test("Speech synthesis utility methods execute without throwing in server/headless environments", () => {
+  assert.doesNotThrow(() => {
+    playAudioChime();
+  });
+
   assert.doesNotThrow(() => {
     unlockSpeechSynthesis();
   });

@@ -7,6 +7,7 @@ interface ControlsDockProps {
   isPlaying: boolean;
   isSpeechEnabled: boolean;
   isSpeaking?: boolean;
+  hasInteracted?: boolean;
   theme: Theme;
   lang: Language;
   showSubtitles: boolean;
@@ -27,6 +28,7 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
   isPlaying,
   isSpeechEnabled,
   isSpeaking = false,
+  hasInteracted = true,
   theme,
   lang,
   showSubtitles,
@@ -92,7 +94,9 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
           className={`keycap-btn keycap-speech ${isSpeechEnabled ? "is-active-accent" : ""} ${isSpeaking ? "is-speaking" : ""}`}
           onClick={onToggleSpeech}
           title={
-            isSpeechEnabled
+            !hasInteracted && isSpeechEnabled
+              ? isZh ? "点击开启原声语音朗读" : "Click to enable voice narration"
+              : isSpeechEnabled
               ? isZh ? "语音朗读已开启（点击静音）" : "Voice narration active (Click to mute)"
               : isZh ? "语音朗读已静音（点击开启）" : "Voice muted (Click to enable)"
           }
@@ -111,6 +115,8 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
             {isSpeechEnabled
               ? isSpeaking
                 ? isZh ? "朗读中" : "SPEAKING"
+                : !hasInteracted
+                ? isZh ? "开启语音" : "UNMUTE"
                 : isZh ? "语音开" : "VOICE ON"
               : isZh ? "语音关" : "VOICE OFF"}
           </span>
@@ -125,7 +131,7 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
           aria-label="Toggle Language"
         >
           <span className="keycap-symbol">🌐</span>
-          <span className="keycap-label font-bold">{isZh ? "中 / EN" : "EN / 中"}</span>
+          <span className="keycap-label">{isZh ? "中 / EN" : "EN / 中"}</span>
         </button>
 
         {/* Dark / Light Theme Switcher */}
@@ -140,12 +146,14 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
           <span className="keycap-label">{theme === "dark" ? (isZh ? "深色" : "DARK") : (isZh ? "浅色" : "LIGHT")}</span>
         </button>
 
+        <div className="dock-divider" />
+
         {/* Subtitles Toggle */}
         <button
           type="button"
           className={`keycap-btn keycap-subtitles ${showSubtitles ? "is-sub-active" : ""}`}
           onClick={onToggleSubtitles}
-          title={isZh ? "显示/隐藏字幕 (C 键)" : "Toggle Subtitles (Key C)"}
+          title={isZh ? "显示/隐藏字幕 (C 键)" : "Toggle Subtitles (C)"}
           aria-label="Toggle Subtitles"
         >
           <span className="keycap-symbol">💬</span>
@@ -158,18 +166,20 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
           type="button"
           className="keycap-btn keycap-fullscreen"
           onClick={onToggleFullscreen}
-          title={isZh ? "全屏模式 (F 键)" : "Fullscreen (Key F)"}
+          title={isFullscreen ? (isZh ? "退出全屏 (ESC)" : "Exit Fullscreen") : (isZh ? "全屏模式 (F 键)" : "Fullscreen Mode")}
           aria-label="Toggle Fullscreen"
         >
-          <span className="keycap-symbol">{isFullscreen ? "⛶" : "⛶"}</span>
-          <span className="keycap-label">{isFullscreen ? (isZh ? "还原" : "EXIT") : (isZh ? "全屏" : "FULL")}</span>
+          <span className="keycap-symbol">{isFullscreen ? "⤦" : "⛶"}</span>
+          <span className="keycap-label">{isFullscreen ? (isZh ? "退出" : "EXIT") : (isZh ? "全屏" : "FULL")}</span>
           <kbd className="keycap-kbd">F</kbd>
         </button>
       </div>
 
-      <div className="dock-status-line">
-        <span className="dock-ch-indicator">
-          {isZh ? `第 ${currentChapterIndex + 1} / ${totalChapters} 章` : `CH ${currentChapterIndex + 1} OF ${totalChapters}`}
+      <div className="dock-hint-footer">
+        <span className="dock-hint-text">
+          {isZh
+            ? `第 ${currentChapterIndex + 1} / ${totalChapters} 章 · 使用键盘快捷键快速导航`
+            : `CH ${currentChapterIndex + 1} OF ${totalChapters} · QUICK NAVIGATION WITH KEYBOARD SHORTCUTS`}
         </span>
       </div>
     </aside>

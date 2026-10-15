@@ -51,6 +51,7 @@ export const ChapterPlayer: React.FC = () => {
     return true;
   });
 
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
@@ -136,10 +137,42 @@ export const ChapterPlayer: React.FC = () => {
   // Web Speech API synthesis effect
   const lastSpokenKeyRef = useRef<string>("");
 
+  const handleUnlockAndPlay = useCallback(() => {
+    unlockSpeechSynthesis();
+    setHasInteracted(true);
+    if (isSpeechEnabled && isPlayingRef.current) {
+      const text = t(activeBeat.scriptText, lang);
+      lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
+      playSpeech(
+        text,
+        lang,
+        () => setIsSpeaking(true),
+        () => setIsSpeaking(false)
+      );
+    }
+  }, [isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex]);
+
+  // Global user interaction wakeup: unlock browser audio context on first touch/click
   useEffect(() => {
-    if (!isSpeechEnabled || !isPlaying || isExportMode) {
-      stopSpeech();
-      setIsSpeaking(false);
+    const onFirstGesture = () => {
+      handleUnlockAndPlay();
+    };
+
+    window.addEventListener("pointerdown", onFirstGesture, { once: true });
+    window.addEventListener("keydown", onFirstGesture, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", onFirstGesture);
+      window.removeEventListener("keydown", onFirstGesture);
+    };
+  }, [handleUnlockAndPlay]);
+
+  // Play narration whenever beat or chapter transitions (after interaction)
+  useEffect(() => {
+    if (!hasInteracted || !isSpeechEnabled || !isPlaying || isExportMode) {
+      if (!isSpeechEnabled || !isPlaying || isExportMode) {
+        stopSpeech();
+        setIsSpeaking(false);
+      }
       return;
     }
 
@@ -154,7 +187,7 @@ export const ChapterPlayer: React.FC = () => {
         () => setIsSpeaking(false)
       );
     }
-  }, [chapter.id, beatIndex, lang, isSpeechEnabled, isPlaying, isExportMode, activeBeat.scriptText]);
+  }, [hasInteracted, chapter.id, beatIndex, lang, isSpeechEnabled, isPlaying, isExportMode, activeBeat.scriptText]);
 
   // Clean speech when unmounting
   useEffect(() => {
@@ -162,30 +195,6 @@ export const ChapterPlayer: React.FC = () => {
       stopSpeech();
     };
   }, []);
-
-  // Global user interaction wakeup: unlock browser audio context on first touch/click
-  useEffect(() => {
-    const handleFirstGesture = () => {
-      unlockSpeechSynthesis();
-      if (isSpeechEnabled && isPlayingRef.current) {
-        const text = t(activeBeat.scriptText, lang);
-        lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
-        playSpeech(
-          text,
-          lang,
-          () => setIsSpeaking(true),
-          () => setIsSpeaking(false)
-        );
-      }
-    };
-
-    window.addEventListener("pointerdown", handleFirstGesture, { once: true });
-    window.addEventListener("keydown", handleFirstGesture, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", handleFirstGesture);
-      window.removeEventListener("keydown", handleFirstGesture);
-    };
-  }, [isSpeechEnabled, chapter.id, beatIndex, lang, activeBeat.scriptText]);
 
   // Expose window.__renderFrame for automated video export
   useEffect(() => {
@@ -250,6 +259,8 @@ export const ChapterPlayer: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       unlockSpeechSynthesis();
+      if (!hasInteracted) setHasInteracted(true);
+
       if (e.code === "Space") {
         e.preventDefault();
         setIsPlaying((p) => {
@@ -290,10 +301,11 @@ export const ChapterPlayer: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentChapterIndex, goToChapter, selectBeat, isSpeechEnabled, activeBeat.scriptText, lang]);
+  }, [hasInteracted, currentChapterIndex, goToChapter, selectBeat, isSpeechEnabled, activeBeat.scriptText, lang]);
 
   const togglePlay = useCallback(() => {
     unlockSpeechSynthesis();
+    if (!hasInteracted) setHasInteracted(true);
     setIsPlaying((p) => {
       const next = !p;
       if (!next) {
@@ -310,10 +322,27 @@ export const ChapterPlayer: React.FC = () => {
       }
       return next;
     });
-  }, [isSpeechEnabled, activeBeat.scriptText, lang]);
+  }, [hasInteracted, isSpeechEnabled, activeBeat.scriptText, lang]);
 
   const toggleSpeech = useCallback(() => {
     unlockSpeechSynthesis();
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      setIsSpeechEnabled(true);
+      try {
+        localStorage.setItem("anatomy-speech", "1");
+      } catch {}
+      const text = t(activeBeat.scriptText, lang);
+      lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
+      playSpeech(
+        text,
+        lang,
+        () => setIsSpeaking(true),
+        () => setIsSpeaking(false)
+      );
+      return;
+    }
+
     setIsSpeechEnabled((prev) => {
       const next = !prev;
       try {
@@ -321,7 +350,7 @@ export const ChapterPlayer: React.FC = () => {
       } catch {}
 
       if (next) {
-        // User clicked to enable speech: speak immediately in the user gesture event stack!
+        // User clicked to enable speech: speak immediately in user gesture call stack
         lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
         const text = t(activeBeat.scriptText, lang);
         playSpeech(
@@ -337,7 +366,7 @@ export const ChapterPlayer: React.FC = () => {
       }
       return next;
     });
-  }, [chapter.id, beatIndex, lang, activeBeat.scriptText]);
+  }, [hasInteracted, chapter.id, beatIndex, lang, activeBeat.scriptText]);
 
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
@@ -345,6 +374,7 @@ export const ChapterPlayer: React.FC = () => {
 
   const toggleLang = useCallback(() => {
     unlockSpeechSynthesis();
+    if (!hasInteracted) setHasInteracted(true);
     setLang((l) => {
       const nextLang = l === "zh" ? "en" : "zh";
       if (isSpeechEnabled && isPlayingRef.current) {
@@ -359,7 +389,7 @@ export const ChapterPlayer: React.FC = () => {
       }
       return nextLang;
     });
-  }, [chapter.id, beatIndex, isSpeechEnabled, activeBeat.scriptText]);
+  }, [hasInteracted, chapter.id, beatIndex, isSpeechEnabled, activeBeat.scriptText]);
 
   const toggleSubtitles = useCallback(() => {
     setShowSubtitles((s) => !s);
@@ -387,6 +417,23 @@ export const ChapterPlayer: React.FC = () => {
         lang={lang}
         onSelectBeat={selectBeat}
       />
+
+      {!hasInteracted && isSpeechEnabled && !isExportMode && (
+        <div
+          className="audio-unlock-banner"
+          onClick={handleUnlockAndPlay}
+          role="button"
+          tabIndex={0}
+          title={lang === "zh" ? "点击开启原声语音讲解" : "Click to enable audio voiceover"}
+        >
+          <span className="unlock-pulsing-dot" />
+          <span className="unlock-icon">🔊</span>
+          <span className="unlock-title">
+            {lang === "zh" ? "点击任意处或按空格开启原声语音讲解" : "Click anywhere or press Space to enable voiceover"}
+          </span>
+          <kbd className="unlock-kbd">{lang === "zh" ? "点击开启" : "SPACE / CLICK"}</kbd>
+        </div>
+      )}
 
       <IsometricStage
         chapter={chapter}
@@ -428,6 +475,7 @@ export const ChapterPlayer: React.FC = () => {
         isPlaying={isPlaying}
         isSpeechEnabled={isSpeechEnabled}
         isSpeaking={isSpeaking}
+        hasInteracted={hasInteracted}
         theme={theme}
         lang={lang}
         showSubtitles={showSubtitles}
