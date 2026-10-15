@@ -373,39 +373,51 @@ export function playSpeech(
 
   stopSpeech();
 
-  // Primary Engine: Pre-synthesized AAC studio audio
+  // Primary Engine: Pre-synthesized studio audio (AAC .m4a or .mp3)
   if (chapterId && typeof beatIndex === "number") {
     try {
-      const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.m4a`;
-      const audio = new Audio(audioUrl);
-      window.__activeAudioElement = audio;
+      const tryPlayFormat = (format: "m4a" | "mp3") => {
+        const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.${format}`;
+        const audio = new Audio(audioUrl);
+        window.__activeAudioElement = audio;
 
-      audio.onplay = () => {
-        onStart?.();
-      };
+        audio.onplay = () => {
+          onStart?.();
+        };
 
-      audio.onended = () => {
-        if (window.__activeAudioElement === audio) {
-          window.__activeAudioElement = null;
+        audio.onended = () => {
+          if (window.__activeAudioElement === audio) {
+            window.__activeAudioElement = null;
+          }
+          onEnd?.();
+        };
+
+        audio.onerror = () => {
+          if (window.__activeAudioElement === audio) {
+            window.__activeAudioElement = null;
+          }
+          if (format === "m4a") {
+            // Try MP3 fallback
+            tryPlayFormat("mp3");
+          } else {
+            // Fallback to Web Speech API
+            speakWithWebSpeech(text, lang, onStart, onEnd, onError);
+          }
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            if (format === "m4a") {
+              tryPlayFormat("mp3");
+            } else {
+              speakWithWebSpeech(text, lang, onStart, onEnd, onError);
+            }
+          });
         }
-        onEnd?.();
       };
 
-      audio.onerror = () => {
-        if (window.__activeAudioElement === audio) {
-          window.__activeAudioElement = null;
-        }
-        // Fallback to Web Speech API
-        speakWithWebSpeech(text, lang, onStart, onEnd, onError);
-      };
-
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Fallback to Web Speech API if audio.play was blocked
-          speakWithWebSpeech(text, lang, onStart, onEnd, onError);
-        });
-      }
+      tryPlayFormat("m4a");
       return true;
     } catch {
       // Fallback

@@ -12,7 +12,8 @@
     "dev": "vite",
     "build": "tsc && vite build && cp dist/index.html dist/broll-player.html",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "generate:audio": "node --experimental-strip-types scripts/generate-minimax-audio.ts"
   },
   "engines": {
     "node": ">=22.18.0"
