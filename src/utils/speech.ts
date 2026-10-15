@@ -2,11 +2,12 @@ import type { Language } from "../types.ts";
 
 declare global {
   interface Window {
+    __activeAudioElement?: HTMLAudioElement | null;
     __activeSpeechUtterance?: SpeechSynthesisUtterance | null;
     __activeSpeechQueue?: SpeechSynthesisUtterance[];
-    __speechUnlocked?: boolean;
     __speechKeepAliveTimer?: number | null;
     __audioCtx?: AudioContext | null;
+    __speechUnlocked?: boolean;
   }
 }
 
@@ -129,13 +130,10 @@ export function resolveVoice(lang: Language): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null;
 
   if (lang === "zh") {
-    // 1. Prioritize natural Chinese voices across macOS, Windows, Android, Chrome OS
+    // 1. Prioritize natural local Chinese voices
     const preferredZhNames = [
       "婷婷",
       "tingting",
-      "google 普通话",
-      "google 國語",
-      "google 粤語",
       "xiaoxiao",
       "晓晓",
       "yunxi",
@@ -151,6 +149,7 @@ export function resolveVoice(lang: Language): SpeechSynthesisVoice | null {
       "meijia",
       "善怡",
       "sinji",
+      "google 普通话",
     ];
 
     for (const pref of preferredZhNames) {
@@ -176,14 +175,12 @@ export function resolveVoice(lang: Language): SpeechSynthesisVoice | null {
     );
     if (anyZh) return anyZh;
 
-    // Fallback: any voice starting with zh
     return voices.find((v) => v.lang.toLowerCase().startsWith("zh")) || null;
   }
 
   // English
   const preferredEnNames = [
     "samantha",
-    "google us english",
     "alex",
     "jenny",
     "guy",
@@ -193,6 +190,7 @@ export function resolveVoice(lang: Language): SpeechSynthesisVoice | null {
     "david",
     "mark",
     "karen",
+    "google us english",
   ];
 
   for (const pref of preferredEnNames) {
@@ -228,32 +226,37 @@ export function unlockSpeechSynthesis(): void {
   // 1. AudioContext unlock
   playAudioChime();
 
-  // 2. SpeechSynthesis unlock
+  // 2. SpeechSynthesis engine wakeup (without dummy utterance)
   if ("speechSynthesis" in window) {
     try {
       window.speechSynthesis.resume();
-      if (!window.__speechUnlocked) {
-        // Speak a 0-volume empty string synchronously to grant autoplay permission in Chrome/Safari
-        const silentUt = new SpeechSynthesisUtterance("");
-        silentUt.volume = 0;
-        window.speechSynthesis.speak(silentUt);
-        window.__speechUnlocked = true;
-      }
+      window.__speechUnlocked = true;
     } catch {}
   }
 }
 
 /**
- * Cancel and stop any ongoing speech synthesis immediately.
+ * Cancel and stop any ongoing speech synthesis or audio playback immediately.
  */
 export function stopSpeech(): void {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  if (typeof window === "undefined") return;
   try {
+    // Stop active HTML5 audio
+    if (window.__activeAudioElement) {
+      window.__activeAudioElement.pause();
+      window.__activeAudioElement.currentTime = 0;
+      window.__activeAudioElement = null;
+    }
+
     if (window.__speechKeepAliveTimer) {
       clearInterval(window.__speechKeepAliveTimer);
       window.__speechKeepAliveTimer = null;
     }
-    window.speechSynthesis.cancel();
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
     if (window.__activeSpeechUtterance) {
       window.__activeSpeechUtterance = null;
     }
@@ -262,9 +265,9 @@ export function stopSpeech(): void {
 }
 
 /**
- * Speak text with synchronous invocation, anti-GC retention, and Chrome keep-alive watchdog.
+ * Fallback Web Speech API synthesis.
  */
-export function playSpeech(
+function speakWithWebSpeech(
   text: string,
   lang: Language = "zh",
   onStart?: () => void,
@@ -275,11 +278,9 @@ export function playSpeech(
   if (!text || !text.trim()) return false;
 
   try {
-    // 1. Cancel previous utterance and resume synthesis queue
     window.speechSynthesis.cancel();
     window.speechSynthesis.resume();
 
-    // 2. Global queue to prevent garbage collection in Chrome / Safari V8
     window.__activeSpeechQueue = window.__activeSpeechQueue || [];
 
     const utterance = new SpeechSynthesisUtterance(text.trim());
@@ -293,11 +294,10 @@ export function playSpeech(
       utterance.voice = matchedVoice;
     }
 
-    // Retain strong references on window
     window.__activeSpeechUtterance = utterance;
     window.__activeSpeechQueue.push(utterance);
 
-    // Chrome 15s freeze watchdog: resume every 8s while speaking
+    // Watchdog
     if (window.__speechKeepAliveTimer) {
       clearInterval(window.__speechKeepAliveTimer);
       window.__speechKeepAliveTimer = null;
@@ -346,11 +346,72 @@ export function playSpeech(
       onError?.(e);
     };
 
-    // Invoke speak synchronously to preserve transient user activation in Chrome
     window.speechSynthesis.speak(utterance);
     return true;
   } catch (err) {
     console.error("[SpeechSynthesis] setup failed:", err);
     return false;
   }
+}
+
+/**
+ * Play narration with dual engines:
+ * 1. High-fidelity AAC studio audio (immune to browser TTS bugs, 100% reliable)
+ * 2. Automatic fallback to Web Speech API if audio clip is not available
+ */
+export function playSpeech(
+  text: string,
+  lang: Language = "zh",
+  onStart?: () => void,
+  onEnd?: () => void,
+  onError?: (err: any) => void,
+  chapterId?: string,
+  beatIndex?: number
+): boolean {
+  if (typeof window === "undefined") return false;
+  if (!text || !text.trim()) return false;
+
+  stopSpeech();
+
+  // Primary Engine: Pre-synthesized AAC studio audio
+  if (chapterId && typeof beatIndex === "number") {
+    try {
+      const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.m4a`;
+      const audio = new Audio(audioUrl);
+      window.__activeAudioElement = audio;
+
+      audio.onplay = () => {
+        onStart?.();
+      };
+
+      audio.onended = () => {
+        if (window.__activeAudioElement === audio) {
+          window.__activeAudioElement = null;
+        }
+        onEnd?.();
+      };
+
+      audio.onerror = () => {
+        if (window.__activeAudioElement === audio) {
+          window.__activeAudioElement = null;
+        }
+        // Fallback to Web Speech API
+        speakWithWebSpeech(text, lang, onStart, onEnd, onError);
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Fallback to Web Speech API if audio.play was blocked
+          speakWithWebSpeech(text, lang, onStart, onEnd, onError);
+        });
+      }
+      return true;
+    } catch {
+      // Fallback
+    }
+  }
+
+  // Secondary Engine: Web Speech API synthesis
+  return speakWithWebSpeech(text, lang, onStart, onEnd, onError);
 }

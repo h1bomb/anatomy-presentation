@@ -147,7 +147,10 @@ export const ChapterPlayer: React.FC = () => {
         text,
         lang,
         () => setIsSpeaking(true),
-        () => setIsSpeaking(false)
+        () => setIsSpeaking(false),
+        undefined,
+        chapter.id,
+        beatIndex
       );
     }
   }, [isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex]);
@@ -184,7 +187,10 @@ export const ChapterPlayer: React.FC = () => {
         text,
         lang,
         () => setIsSpeaking(true),
-        () => setIsSpeaking(false)
+        () => setIsSpeaking(false),
+        undefined,
+        chapter.id,
+        beatIndex
       );
     }
   }, [hasInteracted, chapter.id, beatIndex, lang, isSpeechEnabled, isPlaying, isExportMode, activeBeat.scriptText]);
@@ -274,7 +280,10 @@ export const ChapterPlayer: React.FC = () => {
               text,
               lang,
               () => setIsSpeaking(true),
-              () => setIsSpeaking(false)
+              () => setIsSpeaking(false),
+              undefined,
+              chapter.id,
+              beatIndex
             );
           }
           return next;
@@ -317,12 +326,15 @@ export const ChapterPlayer: React.FC = () => {
           text,
           lang,
           () => setIsSpeaking(true),
-          () => setIsSpeaking(false)
+          () => setIsSpeaking(false),
+          undefined,
+          chapter.id,
+          beatIndex
         );
       }
       return next;
     });
-  }, [hasInteracted, isSpeechEnabled, activeBeat.scriptText, lang]);
+  }, [hasInteracted, isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex]);
 
   const toggleSpeech = useCallback(() => {
     unlockSpeechSynthesis();
@@ -338,7 +350,10 @@ export const ChapterPlayer: React.FC = () => {
         text,
         lang,
         () => setIsSpeaking(true),
-        () => setIsSpeaking(false)
+        () => setIsSpeaking(false),
+        undefined,
+        chapter.id,
+        beatIndex
       );
       return;
     }
@@ -357,7 +372,10 @@ export const ChapterPlayer: React.FC = () => {
           text,
           lang,
           () => setIsSpeaking(true),
-          () => setIsSpeaking(false)
+          () => setIsSpeaking(false),
+          undefined,
+          chapter.id,
+          beatIndex
         );
       } else {
         stopSpeech();
@@ -384,7 +402,10 @@ export const ChapterPlayer: React.FC = () => {
           text,
           nextLang,
           () => setIsSpeaking(true),
-          () => setIsSpeaking(false)
+          () => setIsSpeaking(false),
+          undefined,
+          chapter.id,
+          beatIndex
         );
       }
       return nextLang;
