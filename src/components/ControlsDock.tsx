@@ -6,6 +6,7 @@ interface ControlsDockProps {
   totalChapters: number;
   isPlaying: boolean;
   isSpeechEnabled: boolean;
+  isSpeaking?: boolean;
   theme: Theme;
   lang: Language;
   showSubtitles: boolean;
@@ -25,6 +26,7 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
   totalChapters,
   isPlaying,
   isSpeechEnabled,
+  isSpeaking = false,
   theme,
   lang,
   showSubtitles,
@@ -87,18 +89,30 @@ export const ControlsDock: React.FC<ControlsDockProps> = ({
         {/* Web Speech API Voice Reading Toggle */}
         <button
           type="button"
-          className={`keycap-btn keycap-speech ${isSpeechEnabled ? "is-active-accent" : ""}`}
+          className={`keycap-btn keycap-speech ${isSpeechEnabled ? "is-active-accent" : ""} ${isSpeaking ? "is-speaking" : ""}`}
           onClick={onToggleSpeech}
           title={
             isSpeechEnabled
-              ? isZh ? "点击关闭语音朗读" : "Click to mute voiceover"
-              : isZh ? "点击开启浏览器语音朗读" : "Click to enable browser voiceover"
+              ? isZh ? "语音朗读已开启（点击静音）" : "Voice narration active (Click to mute)"
+              : isZh ? "语音朗读已静音（点击开启）" : "Voice muted (Click to enable)"
           }
           aria-label="Toggle Voice Reading"
         >
-          <span className="keycap-symbol">{isSpeechEnabled ? "🔊" : "🔇"}</span>
+          {isSpeaking ? (
+            <span className="speech-wave-bars" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          ) : (
+            <span className="keycap-symbol">{isSpeechEnabled ? "🔊" : "🔇"}</span>
+          )}
           <span className="keycap-label">
-            {isSpeechEnabled ? (isZh ? "朗读中" : "VOICE ON") : (isZh ? "朗读关" : "VOICE OFF")}
+            {isSpeechEnabled
+              ? isSpeaking
+                ? isZh ? "朗读中" : "SPEAKING"
+                : isZh ? "语音开" : "VOICE ON"
+              : isZh ? "语音关" : "VOICE OFF"}
           </span>
         </button>
 

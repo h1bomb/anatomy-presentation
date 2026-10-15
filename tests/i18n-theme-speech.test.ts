@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CHAPTERS, t, tList } from "../src/data/chapters.ts";
+import { resolveVoice, stopSpeech, playSpeech, unlockSpeechSynthesis } from "../src/utils/speech.ts";
 
 test("Every chapter has complete bilingual copy (Chinese & English)", () => {
   assert.equal(CHAPTERS.length, 15);
@@ -35,4 +36,23 @@ test("Every chapter has complete bilingual copy (Chinese & English)", () => {
       assert.ok(enMetrics.length > 0, `${ch.id} beat ${i} missing en metrics`);
     }
   }
+});
+
+test("Speech synthesis utility methods execute without throwing in server/headless environments", () => {
+  assert.doesNotThrow(() => {
+    unlockSpeechSynthesis();
+  });
+
+  assert.doesNotThrow(() => {
+    stopSpeech();
+  });
+
+  const zhVoice = resolveVoice("zh");
+  const enVoice = resolveVoice("en");
+  // In Node.js environment without window.speechSynthesis, returns null safely
+  assert.equal(zhVoice, null);
+  assert.equal(enVoice, null);
+
+  const played = playSpeech("测试解说", "zh");
+  assert.equal(played, false);
 });

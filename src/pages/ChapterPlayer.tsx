@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { CHAPTERS, getBeatIndex, getActiveFigureKey } from "../data/chapters.ts";
+import { CHAPTERS, getBeatIndex, getActiveFigureKey, t } from "../data/chapters.ts";
 import { TopBar } from "../components/TopBar.tsx";
 import { SlideNarrative } from "../components/SlideNarrative.tsx";
 import { IsometricStage } from "../components/IsometricStage.tsx";
 import { Teleprompter } from "../components/Teleprompter.tsx";
 import { ControlsDock } from "../components/ControlsDock.tsx";
+import { playSpeech, stopSpeech, unlockSpeechSynthesis } from "../utils/speech.ts";
 import type { Language, Theme } from "../types.ts";
 
 export const ChapterPlayer: React.FC = () => {
   const { chapterId } = useParams<{ chapterId?: string }>();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const isExportMode = searchParams.get("export") === "1";
   const subtitlesParam = searchParams.get("subtitles");
@@ -39,13 +40,18 @@ export const ChapterPlayer: React.FC = () => {
   });
 
   const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(() => {
+    if (searchParams.get("speech") === "0") return false;
     if (searchParams.get("speech") === "1") return true;
     try {
-      return localStorage.getItem("anatomy-speech") === "1";
+      const stored = localStorage.getItem("anatomy-speech");
+      if (stored === "0") return false;
+      if (stored === "1") return true;
     } catch {}
-    return false;
+    // Default to true so speech is enabled for interactive exploration
+    return true;
   });
 
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // Sync theme to root DOM
@@ -113,6 +119,7 @@ export const ChapterPlayer: React.FC = () => {
   // Jump to specific chapter and time
   const goToChapter = useCallback(
     (index: number, newTime: number = 0) => {
+      unlockSpeechSynthesis();
       const safeIndex = (index + CHAPTERS.length) % CHAPTERS.length;
       const targetCh = CHAPTERS[safeIndex];
       setTimeSec(newTime);
@@ -122,62 +129,63 @@ export const ChapterPlayer: React.FC = () => {
   );
 
   const selectBeat = useCallback((idx: number) => {
+    unlockSpeechSynthesis();
     setTimeSec(idx * 10 + 0.1);
   }, []);
 
   // Web Speech API synthesis effect
   const lastSpokenKeyRef = useRef<string>("");
+
   useEffect(() => {
     if (!isSpeechEnabled || !isPlaying || isExportMode) {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
-      return;
-    }
-
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      stopSpeech();
+      setIsSpeaking(false);
       return;
     }
 
     const speechKey = `${chapter.id}:${beatIndex}:${lang}`;
     if (speechKey !== lastSpokenKeyRef.current) {
       lastSpokenKeyRef.current = speechKey;
-      window.speechSynthesis.cancel();
-
-      const text = typeof activeBeat.scriptText === "string"
-        ? activeBeat.scriptText
-        : activeBeat.scriptText[lang] || activeBeat.scriptText.zh || "";
-
-      if (text) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang === "zh" ? "zh-CN" : "en-US";
-        utterance.rate = lang === "zh" ? 1.08 : 1.02;
-        utterance.pitch = 1.0;
-
-        // Try to pick a natural voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find((v) =>
-          lang === "zh"
-            ? (v.lang.startsWith("zh") || v.name.includes("Chinese") || v.name.includes("Ting-Ting") || v.name.includes("Sin-ji"))
-            : (v.lang.startsWith("en") && (v.name.includes("Samantha") || v.name.includes("Daniel") || v.name.includes("Google") || v.name.includes("Natural")))
-        );
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        }
-
-        window.speechSynthesis.speak(utterance);
-      }
+      const text = t(activeBeat.scriptText, lang);
+      playSpeech(
+        text,
+        lang,
+        () => setIsSpeaking(true),
+        () => setIsSpeaking(false)
+      );
     }
   }, [chapter.id, beatIndex, lang, isSpeechEnabled, isPlaying, isExportMode, activeBeat.scriptText]);
 
-  // Clean speech when unmounting or pausing
+  // Clean speech when unmounting
   useEffect(() => {
     return () => {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopSpeech();
     };
   }, []);
+
+  // Global user interaction wakeup: unlock browser audio context on first touch/click
+  useEffect(() => {
+    const handleFirstGesture = () => {
+      unlockSpeechSynthesis();
+      if (isSpeechEnabled && isPlayingRef.current) {
+        const text = t(activeBeat.scriptText, lang);
+        lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
+        playSpeech(
+          text,
+          lang,
+          () => setIsSpeaking(true),
+          () => setIsSpeaking(false)
+        );
+      }
+    };
+
+    window.addEventListener("pointerdown", handleFirstGesture, { once: true });
+    window.addEventListener("keydown", handleFirstGesture, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", handleFirstGesture);
+      window.removeEventListener("keydown", handleFirstGesture);
+    };
+  }, [isSpeechEnabled, chapter.id, beatIndex, lang, activeBeat.scriptText]);
 
   // Expose window.__renderFrame for automated video export
   useEffect(() => {
@@ -241,13 +249,24 @@ export const ChapterPlayer: React.FC = () => {
   // Keyboard navigation shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      unlockSpeechSynthesis();
       if (e.code === "Space") {
         e.preventDefault();
         setIsPlaying((p) => {
-          if (p && typeof window !== "undefined" && "speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
+          const next = !p;
+          if (!next) {
+            stopSpeech();
+            setIsSpeaking(false);
+          } else if (isSpeechEnabled) {
+            const text = t(activeBeat.scriptText, lang);
+            playSpeech(
+              text,
+              lang,
+              () => setIsSpeaking(true),
+              () => setIsSpeaking(false)
+            );
           }
-          return !p;
+          return next;
         });
       } else if (e.code === "ArrowRight") {
         e.preventDefault();
@@ -271,34 +290,76 @@ export const ChapterPlayer: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentChapterIndex, goToChapter, selectBeat]);
+  }, [currentChapterIndex, goToChapter, selectBeat, isSpeechEnabled, activeBeat.scriptText, lang]);
 
   const togglePlay = useCallback(() => {
+    unlockSpeechSynthesis();
     setIsPlaying((p) => {
-      if (p && typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
-      return !p;
-    });
-  }, []);
-
-  const toggleSpeech = useCallback(() => {
-    setIsSpeechEnabled((s) => {
-      const next = !s;
-      if (!next && typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
+      const next = !p;
+      if (!next) {
+        stopSpeech();
+        setIsSpeaking(false);
+      } else if (isSpeechEnabled) {
+        const text = t(activeBeat.scriptText, lang);
+        playSpeech(
+          text,
+          lang,
+          () => setIsSpeaking(true),
+          () => setIsSpeaking(false)
+        );
       }
       return next;
     });
-  }, []);
+  }, [isSpeechEnabled, activeBeat.scriptText, lang]);
+
+  const toggleSpeech = useCallback(() => {
+    unlockSpeechSynthesis();
+    setIsSpeechEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("anatomy-speech", next ? "1" : "0");
+      } catch {}
+
+      if (next) {
+        // User clicked to enable speech: speak immediately in the user gesture event stack!
+        lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
+        const text = t(activeBeat.scriptText, lang);
+        playSpeech(
+          text,
+          lang,
+          () => setIsSpeaking(true),
+          () => setIsSpeaking(false)
+        );
+      } else {
+        stopSpeech();
+        setIsSpeaking(false);
+        lastSpokenKeyRef.current = "";
+      }
+      return next;
+    });
+  }, [chapter.id, beatIndex, lang, activeBeat.scriptText]);
 
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }, []);
 
   const toggleLang = useCallback(() => {
-    setLang((l) => (l === "zh" ? "en" : "zh"));
-  }, []);
+    unlockSpeechSynthesis();
+    setLang((l) => {
+      const nextLang = l === "zh" ? "en" : "zh";
+      if (isSpeechEnabled && isPlayingRef.current) {
+        lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${nextLang}`;
+        const text = t(activeBeat.scriptText, nextLang);
+        playSpeech(
+          text,
+          nextLang,
+          () => setIsSpeaking(true),
+          () => setIsSpeaking(false)
+        );
+      }
+      return nextLang;
+    });
+  }, [chapter.id, beatIndex, isSpeechEnabled, activeBeat.scriptText]);
 
   const toggleSubtitles = useCallback(() => {
     setShowSubtitles((s) => !s);
@@ -366,6 +427,7 @@ export const ChapterPlayer: React.FC = () => {
         totalChapters={CHAPTERS.length}
         isPlaying={isPlaying}
         isSpeechEnabled={isSpeechEnabled}
+        isSpeaking={isSpeaking}
         theme={theme}
         lang={lang}
         showSubtitles={showSubtitles}
