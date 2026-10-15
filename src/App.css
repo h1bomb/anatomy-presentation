@@ -16,6 +16,12 @@
   --text-hi: #d6d5ce;
   --text-mid: #94938b;
   --text-lo: #5c5b55;
+  --btn-icon-bg: rgba(255, 255, 255, 0.05);
+  --btn-icon-border: rgba(255, 255, 255, 0.16);
+  --btn-icon-text: #c5c4bc;
+  --btn-icon-hover-bg: rgba(255, 255, 255, 0.14);
+  --btn-icon-hover-border: rgba(255, 255, 255, 0.35);
+  --btn-icon-hover-text: #ffffff;
   --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
 
@@ -43,16 +49,22 @@
   --bg-glass: rgba(255, 255, 255, 0.92);
   --bg-card-active: rgba(255, 255, 255, 0.96);
   --bg-card-idle: rgba(242, 241, 236, 0.75);
-  --border-dim: rgba(0, 0, 0, 0.08);
-  --border-mid: rgba(0, 0, 0, 0.16);
+  --border-dim: rgba(0, 0, 0, 0.10);
+  --border-mid: rgba(0, 0, 0, 0.22);
   --border-lit: rgba(17, 17, 16, 0.82);
-  --accent-amber: #c4821c;
+  --accent-amber: #b45309;
   --accent-red: #c93b28;
   --accent-green: #239b56;
   --text-lit: #111110;
-  --text-hi: #2b2a27;
-  --text-mid: #686760;
-  --text-lo: #9e9d95;
+  --text-hi: #1f1e1c;
+  --text-mid: #52514b;
+  --text-lo: #787770;
+  --btn-icon-bg: rgba(0, 0, 0, 0.05);
+  --btn-icon-border: rgba(0, 0, 0, 0.22);
+  --btn-icon-text: #2c2b28;
+  --btn-icon-hover-bg: rgba(0, 0, 0, 0.12);
+  --btn-icon-hover-border: rgba(0, 0, 0, 0.45);
+  --btn-icon-hover-text: #000000;
 
   --anatomy-page: #f5f4ef;
   --anatomy-card: #ffffff;
@@ -258,6 +270,77 @@ html, body {
 @keyframes pulse-dot {
   0%, 100% { opacity: 0.55; transform: scale(0.95); }
   50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Top Bar Action Buttons */
+.top-bar-action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--btn-icon-bg) !important;
+  border: 1px solid var(--btn-icon-border) !important;
+  color: var(--btn-icon-text) !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease-in-out !important;
+}
+
+.top-bar-action-btn:hover {
+  background: var(--btn-icon-hover-bg) !important;
+  border-color: var(--btn-icon-hover-border) !important;
+  color: var(--btn-icon-hover-text) !important;
+}
+
+/* Active Speech button */
+.top-bar-action-btn.is-active-speech {
+  color: var(--accent-amber) !important;
+  border-color: rgba(229, 169, 60, 0.6) !important;
+  background: rgba(229, 169, 60, 0.14) !important;
+}
+
+.top-bar-action-btn.is-active-speech:hover {
+  background: rgba(229, 169, 60, 0.22) !important;
+  color: #fbbf24 !important;
+}
+
+:root[data-theme="light"] .top-bar-action-btn.is-active-speech,
+.theme-light .top-bar-action-btn.is-active-speech {
+  color: #b45309 !important;
+  border-color: #d97706 !important;
+  background: rgba(245, 158, 11, 0.16) !important;
+}
+
+:root[data-theme="light"] .top-bar-action-btn.is-active-speech:hover,
+.theme-light .top-bar-action-btn.is-active-speech:hover {
+  background: rgba(245, 158, 11, 0.24) !important;
+  color: #78350f !important;
+}
+
+/* Active Subtitle button */
+.top-bar-action-btn.is-active-sub {
+  color: var(--accent-blue) !important;
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  background: rgba(56, 189, 248, 0.14) !important;
+}
+
+.top-bar-action-btn.is-active-sub:hover {
+  background: rgba(56, 189, 248, 0.22) !important;
+  color: #7dd3fc !important;
+}
+
+:root[data-theme="light"] .top-bar-action-btn.is-active-sub,
+.theme-light .top-bar-action-btn.is-active-sub {
+  color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.14) !important;
+}
+
+:root[data-theme="light"] .top-bar-action-btn.is-active-sub:hover,
+.theme-light .top-bar-action-btn.is-active-sub:hover {
+  background: rgba(2, 132, 199, 0.22) !important;
+  color: #0c4a6e !important;
 }
 
 /* 2. Slide Narrative */

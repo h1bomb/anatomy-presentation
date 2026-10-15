@@ -129,15 +129,13 @@ export const TopBar: React.FC<TopBarProps> = ({
                     size="icon"
                     onClick={onToggleSpeech}
                     className={cn(
-                      "h-8 w-8 rounded-md transition-colors",
-                      isSpeechEnabled
-                        ? "text-amber-400 border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 hover:text-amber-300"
-                        : "text-neutral-400 hover:text-neutral-200"
+                      "top-bar-action-btn",
+                      isSpeechEnabled && "is-active-speech"
                     )}
                     aria-label="Toggle Voice Reading"
                   >
                     {isSpeechEnabled ? (
-                      <Volume2 className={cn("size-4", isSpeaking && "animate-pulse text-amber-300")} />
+                      <Volume2 className={cn("size-4", isSpeaking && "animate-pulse")} />
                     ) : (
                       <VolumeX className="size-4" />
                     )}
@@ -165,7 +163,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={onToggleLang}
-                    className="h-8 w-8 rounded-md"
+                    className="top-bar-action-btn"
                     aria-label="Toggle Language"
                   >
                     <Languages className="size-4" />
@@ -186,10 +184,8 @@ export const TopBar: React.FC<TopBarProps> = ({
                     size="icon"
                     onClick={onToggleSubtitles}
                     className={cn(
-                      "h-8 w-8 rounded-md transition-colors",
-                      showSubtitles
-                        ? "text-sky-400 border-sky-500/50 bg-sky-500/10 hover:bg-sky-500/20 hover:text-sky-300"
-                        : "text-neutral-400 hover:text-neutral-200"
+                      "top-bar-action-btn",
+                      showSubtitles && "is-active-sub"
                     )}
                     aria-label="Toggle Subtitles"
                   >
@@ -218,7 +214,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={onToggleTheme}
-                    className="h-8 w-8 rounded-md"
+                    className="top-bar-action-btn"
                     aria-label="Toggle Theme"
                   >
                     {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
@@ -246,7 +242,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={onToggleFullscreen}
-                    className="h-8 w-8 rounded-md"
+                    className="top-bar-action-btn"
                     aria-label="Toggle Fullscreen"
                   >
                     {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}

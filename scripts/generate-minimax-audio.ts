@@ -9,7 +9,11 @@ if (!API_KEY) {
   console.error("Error: MINIMAX_API_KEY environment variable is required.");
   process.exit(1);
 }
-const VOICE_ID = process.env.MINIMAX_VOICE_ID || "custom-voice-id";
+const VOICE_ID = process.env.MINIMAX_VOICE_ID;
+if (!VOICE_ID) {
+  console.error("Error: MINIMAX_VOICE_ID environment variable is required.");
+  process.exit(1);
+}
 const MODEL = process.env.MINIMAX_MODEL || "speech-2.8-hd";
 const API_URL = "https://api.minimax.cn/v1/t2a_v2";
 

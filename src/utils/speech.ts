@@ -3,56 +3,9 @@ import type { Language } from "../types.ts";
 declare global {
   interface Window {
     __activeAudioElement?: HTMLAudioElement | null;
-    __activeSpeechUtterance?: SpeechSynthesisUtterance | null;
-    __activeSpeechQueue?: SpeechSynthesisUtterance[];
-    __speechKeepAliveTimer?: number | null;
     __audioCtx?: AudioContext | null;
     __speechUnlocked?: boolean;
   }
-}
-
-// Global retained references to prevent V8 / WebKit garbage collection
-let cachedVoices: SpeechSynthesisVoice[] = [];
-let voicesInitialized = false;
-
-// Filter novelty/toy voices that produce silence or distorted noise on macOS/iOS
-const NOVELTY_VOICE_NAMES = new Set([
-  "eddy",
-  "flo",
-  "reed",
-  "sandy",
-  "shelley",
-  "grandma",
-  "grandpa",
-  "rocko",
-  "bad news",
-  "bahh",
-  "bells",
-  "boing",
-  "bubbles",
-  "cellos",
-  "deranged",
-  "good news",
-  "hysterical",
-  "pipe organ",
-  "trinoids",
-  "whisper",
-  "zarvox",
-  "wobble",
-  "junior",
-  "ralph",
-  "albert",
-  "fred",
-]);
-
-function isNoveltyVoice(name: string): boolean {
-  const lower = name.toLowerCase();
-  for (const nov of NOVELTY_VOICE_NAMES) {
-    if (lower.startsWith(nov) || lower.includes(`(${nov}`) || lower.includes(` ${nov}`)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 // Play a subtle high-tech confirmation chime via Web Audio API
@@ -88,136 +41,8 @@ export function playAudioChime(): void {
   } catch {}
 }
 
-// Initialize voices listener
-export function initVoiceCache(): void {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
-  const load = () => {
-    try {
-      const v = window.speechSynthesis.getVoices();
-      if (v && v.length > 0) {
-        cachedVoices = v;
-        voicesInitialized = true;
-      }
-    } catch {}
-  };
-
-  load();
-  if (typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
-    window.speechSynthesis.onvoiceschanged = load;
-  }
-}
-
-// Call immediately in browser environment
-if (typeof window !== "undefined") {
-  initVoiceCache();
-}
-
-/**
- * Find the optimal natural voice for the target language.
- */
-export function resolveVoice(lang: Language): SpeechSynthesisVoice | null {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
-
-  if (!voicesInitialized || cachedVoices.length === 0) {
-    try {
-      cachedVoices = window.speechSynthesis.getVoices();
-      if (cachedVoices.length > 0) voicesInitialized = true;
-    } catch {}
-  }
-
-  const voices = cachedVoices;
-  if (!voices || voices.length === 0) return null;
-
-  if (lang === "zh") {
-    // 1. Prioritize natural local Chinese voices
-    const preferredZhNames = [
-      "婷婷",
-      "tingting",
-      "xiaoxiao",
-      "晓晓",
-      "yunxi",
-      "云希",
-      "yunyang",
-      "云扬",
-      "yaoyao",
-      "huihui",
-      "慧慧",
-      "kangkang",
-      "康康",
-      "美嘉",
-      "meijia",
-      "善怡",
-      "sinji",
-      "google 普通话",
-    ];
-
-    for (const pref of preferredZhNames) {
-      const found = voices.find((v) => {
-        const nl = v.name.toLowerCase();
-        return (
-          (v.lang.toLowerCase().startsWith("zh") || nl.includes("chinese") || nl.includes("中文")) &&
-          nl.includes(pref)
-        );
-      });
-      if (found) return found;
-    }
-
-    // 2. Exact zh-CN non-novelty voice
-    const zhCn = voices.find(
-      (v) => v.lang.toLowerCase().replace("_", "-") === "zh-cn" && !isNoveltyVoice(v.name)
-    );
-    if (zhCn) return zhCn;
-
-    // 3. Any non-novelty Chinese voice
-    const anyZh = voices.find(
-      (v) => v.lang.toLowerCase().startsWith("zh") && !isNoveltyVoice(v.name)
-    );
-    if (anyZh) return anyZh;
-
-    return voices.find((v) => v.lang.toLowerCase().startsWith("zh")) || null;
-  }
-
-  // English
-  const preferredEnNames = [
-    "samantha",
-    "alex",
-    "jenny",
-    "guy",
-    "aria",
-    "daniel",
-    "zira",
-    "david",
-    "mark",
-    "karen",
-    "google us english",
-  ];
-
-  for (const pref of preferredEnNames) {
-    const found = voices.find((v) => {
-      const nl = v.name.toLowerCase();
-      return (
-        (v.lang.toLowerCase().startsWith("en") || nl.includes("english")) &&
-        nl.includes(pref)
-      );
-    });
-    if (found) return found;
-  }
-
-  const enUs = voices.find(
-    (v) => v.lang.toLowerCase().replace("_", "-") === "en-us" && !isNoveltyVoice(v.name)
-  );
-  if (enUs) return enUs;
-
-  const anyEn = voices.find(
-    (v) => v.lang.toLowerCase().startsWith("en") && !isNoveltyVoice(v.name)
-  );
-  if (anyEn) return anyEn;
-
-  return voices.find((v) => v.lang.toLowerCase().startsWith("en")) || null;
-}
-
 let persistentAudio: HTMLAudioElement | null = null;
+let activePlaybackId = 0;
 
 /**
  * Obtain or create a persistent singleton HTMLAudioElement.
@@ -265,20 +90,22 @@ export function unlockSpeechSynthesis(): void {
     }
   } catch {}
 
-  // 3. SpeechSynthesis engine wakeup
+  // 3. Ensure any browser speech synthesis is permanently silenced
   if ("speechSynthesis" in window) {
     try {
-      window.speechSynthesis.resume();
+      window.speechSynthesis.cancel();
     } catch {}
   }
 }
 
 /**
- * Cancel and stop any ongoing speech synthesis or audio playback immediately.
+ * Cancel and stop any ongoing audio playback immediately.
+ * Web Speech API is never used; cancels any stray browser utterances.
  */
 export function stopSpeech(): void {
   if (typeof window === "undefined") return;
   try {
+    activePlaybackId++; // Invalidate any pending playback requests
     const audio = getAudioElement();
     if (audio) {
       audio.pause();
@@ -287,116 +114,22 @@ export function stopSpeech(): void {
       audio.onerror = null;
     }
 
-    if (window.__speechKeepAliveTimer) {
-      clearInterval(window.__speechKeepAliveTimer);
-      window.__speechKeepAliveTimer = null;
-    }
-
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
-
-    if (window.__activeSpeechUtterance) {
-      window.__activeSpeechUtterance = null;
-    }
-    window.__activeSpeechQueue = [];
   } catch {}
 }
 
 /**
- * Fallback Web Speech API synthesis.
+ * Backward compatibility stub: Web Speech API voices are disabled in favor of custom studio audio.
  */
-function speakWithWebSpeech(
-  text: string,
-  lang: Language = "zh",
-  onStart?: () => void,
-  onEnd?: () => void,
-  onError?: (err: any) => void
-): boolean {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
-  if (!text || !text.trim()) return false;
-
-  try {
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
-
-    window.__activeSpeechQueue = window.__activeSpeechQueue || [];
-
-    const utterance = new SpeechSynthesisUtterance(text.trim());
-    utterance.lang = lang === "zh" ? "zh-CN" : "en-US";
-    utterance.rate = lang === "zh" ? 1.05 : 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    const matchedVoice = resolveVoice(lang);
-    if (matchedVoice) {
-      utterance.voice = matchedVoice;
-    }
-
-    window.__activeSpeechUtterance = utterance;
-    window.__activeSpeechQueue.push(utterance);
-
-    // Watchdog
-    if (window.__speechKeepAliveTimer) {
-      clearInterval(window.__speechKeepAliveTimer);
-      window.__speechKeepAliveTimer = null;
-    }
-    window.__speechKeepAliveTimer = window.setInterval(() => {
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        if (window.speechSynthesis.speaking) {
-          window.speechSynthesis.resume();
-        } else {
-          if (window.__speechKeepAliveTimer) {
-            clearInterval(window.__speechKeepAliveTimer);
-            window.__speechKeepAliveTimer = null;
-          }
-        }
-      }
-    }, 8000);
-
-    const cleanup = () => {
-      if (window.__speechKeepAliveTimer) {
-        clearInterval(window.__speechKeepAliveTimer);
-        window.__speechKeepAliveTimer = null;
-      }
-      if (window.__activeSpeechQueue) {
-        const idx = window.__activeSpeechQueue.indexOf(utterance);
-        if (idx > -1) window.__activeSpeechQueue.splice(idx, 1);
-      }
-      if (window.__activeSpeechUtterance === utterance) {
-        window.__activeSpeechUtterance = null;
-      }
-    };
-
-    utterance.onstart = () => {
-      onStart?.();
-    };
-
-    utterance.onend = () => {
-      cleanup();
-      onEnd?.();
-    };
-
-    utterance.onerror = (e) => {
-      cleanup();
-      if (e.error !== "interrupted" && e.error !== "canceled") {
-        console.warn("[SpeechSynthesis] notice:", e.error);
-      }
-      onError?.(e);
-    };
-
-    window.speechSynthesis.speak(utterance);
-    return true;
-  } catch (err) {
-    console.error("[SpeechSynthesis] setup failed:", err);
-    return false;
-  }
+export function resolveVoice(_lang: Language): SpeechSynthesisVoice | null {
+  return null;
 }
 
 /**
- * Play narration with dual engines:
- * 1. High-fidelity AAC studio audio (immune to browser TTS bugs, 100% reliable)
- * 2. Automatic fallback to Web Speech API if audio clip is not available
+ * Play narration using high-fidelity pre-synthesized studio audio.
+ * Browser Web Speech API is completely disabled to avoid robotic TTS voices when switching quickly.
  */
 export function playSpeech(
   text: string,
@@ -410,62 +143,73 @@ export function playSpeech(
   if (typeof window === "undefined") return false;
   if (!text || !text.trim()) return false;
 
+  // Stop any previous audio track and bump playback ID
   stopSpeech();
+  const playbackId = activePlaybackId;
 
-  // Primary Engine: Pre-synthesized studio audio (AAC .m4a or .mp3)
-  if (chapterId && typeof beatIndex === "number") {
-    try {
-      const audio = getAudioElement();
-      if (audio) {
-        audio.pause();
-
-        const tryPlayFormat = (format: "m4a" | "mp3") => {
-          const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.${format}`;
-
-          audio.onplay = null;
-          audio.onended = null;
-          audio.onerror = null;
-
-          audio.onplay = () => {
-            onStart?.();
-          };
-
-          audio.onended = () => {
-            onEnd?.();
-          };
-
-          audio.onerror = () => {
-            if (format === "m4a") {
-              tryPlayFormat("mp3");
-            } else {
-              speakWithWebSpeech(text, lang, onStart, onEnd, onError);
-            }
-          };
-
-          audio.src = audioUrl;
-          window.__activeAudioElement = audio;
-
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((e) => {
-              if (format === "m4a") {
-                tryPlayFormat("mp3");
-              } else {
-                console.warn("[Audio] continuous play fallback to WebSpeech:", e);
-                speakWithWebSpeech(text, lang, onStart, onEnd, onError);
-              }
-            });
-          }
-        };
-
-        tryPlayFormat("m4a");
-        return true;
-      }
-    } catch {
-      // Fallback
-    }
+  if (!chapterId || typeof beatIndex !== "number") {
+    // Only studio audio is supported; no browser TTS fallback
+    return false;
   }
 
-  // Secondary Engine: Web Speech API synthesis
-  return speakWithWebSpeech(text, lang, onStart, onEnd, onError);
+  try {
+    const audio = getAudioElement();
+    if (!audio) return false;
+
+    const tryPlayFormat = (format: "m4a" | "mp3") => {
+      // Discard if user already triggered another beat/chapter
+      if (playbackId !== activePlaybackId) return;
+
+      const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.${format}`;
+
+      audio.onplay = () => {
+        if (playbackId === activePlaybackId) {
+          onStart?.();
+        }
+      };
+
+      audio.onended = () => {
+        if (playbackId === activePlaybackId) {
+          onEnd?.();
+        }
+      };
+
+      audio.onerror = (e) => {
+        if (playbackId !== activePlaybackId) return;
+
+        if (format === "m4a") {
+          tryPlayFormat("mp3");
+        } else {
+          // Both formats failed, do NOT fallback to WebSpeech
+          console.warn(`[Speech] Custom audio track not available: ${audioUrl}`);
+          onError?.(e);
+        }
+      };
+
+      audio.src = audioUrl;
+      window.__activeAudioElement = audio;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          // If rapid switching occurred, AbortError is normal and expected
+          if (playbackId !== activePlaybackId || err.name === "AbortError") {
+            return;
+          }
+          if (format === "m4a") {
+            tryPlayFormat("mp3");
+          } else {
+            console.warn("[Speech] Audio play error:", err);
+            onError?.(err);
+          }
+        });
+      }
+    };
+
+    tryPlayFormat("m4a");
+    return true;
+  } catch (err) {
+    console.error("[Speech] Setup failed:", err);
+    return false;
+  }
 }
