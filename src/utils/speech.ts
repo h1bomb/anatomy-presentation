@@ -217,20 +217,58 @@ export function resolveVoice(lang: Language): SpeechSynthesisVoice | null {
   return voices.find((v) => v.lang.toLowerCase().startsWith("en")) || null;
 }
 
+let persistentAudio: HTMLAudioElement | null = null;
+
 /**
- * Unlock Web Audio and SpeechSynthesis synchronously within user gesture.
+ * Obtain or create a persistent singleton HTMLAudioElement.
+ * Reusing a single element across beat/chapter switches preserves browser autoplay permissions
+ * and completely prevents audio cutoff or auto-stopping.
+ */
+export function getAudioElement(): HTMLAudioElement | null {
+  if (typeof window === "undefined" || typeof document === "undefined") return null;
+  if (!persistentAudio) {
+    persistentAudio = document.getElementById("anatomy-audio-narrator") as HTMLAudioElement;
+    if (!persistentAudio) {
+      persistentAudio = document.createElement("audio");
+      persistentAudio.id = "anatomy-audio-narrator";
+      persistentAudio.preload = "auto";
+      persistentAudio.setAttribute("playsinline", "true");
+      persistentAudio.style.display = "none";
+      document.body.appendChild(persistentAudio);
+    }
+    window.__activeAudioElement = persistentAudio;
+  }
+  return persistentAudio;
+}
+
+/**
+ * Unlock Web Audio and HTMLAudioElement synchronously within user gesture.
  */
 export function unlockSpeechSynthesis(): void {
   if (typeof window === "undefined") return;
+  window.__speechUnlocked = true;
 
   // 1. AudioContext unlock
   playAudioChime();
 
-  // 2. SpeechSynthesis engine wakeup (without dummy utterance)
+  // 2. Pre-bless persistent HTMLAudioElement so future beat/chapter changes are never blocked
+  try {
+    const audio = getAudioElement();
+    if (audio && (!audio.src || audio.src.startsWith("data:"))) {
+      audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+      const p = audio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          audio.pause();
+        }).catch(() => {});
+      }
+    }
+  } catch {}
+
+  // 3. SpeechSynthesis engine wakeup
   if ("speechSynthesis" in window) {
     try {
       window.speechSynthesis.resume();
-      window.__speechUnlocked = true;
     } catch {}
   }
 }
@@ -241,11 +279,12 @@ export function unlockSpeechSynthesis(): void {
 export function stopSpeech(): void {
   if (typeof window === "undefined") return;
   try {
-    // Stop active HTML5 audio
-    if (window.__activeAudioElement) {
-      window.__activeAudioElement.pause();
-      window.__activeAudioElement.currentTime = 0;
-      window.__activeAudioElement = null;
+    const audio = getAudioElement();
+    if (audio) {
+      audio.pause();
+      audio.onplay = null;
+      audio.onended = null;
+      audio.onerror = null;
     }
 
     if (window.__speechKeepAliveTimer) {
@@ -376,49 +415,52 @@ export function playSpeech(
   // Primary Engine: Pre-synthesized studio audio (AAC .m4a or .mp3)
   if (chapterId && typeof beatIndex === "number") {
     try {
-      const tryPlayFormat = (format: "m4a" | "mp3") => {
-        const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.${format}`;
-        const audio = new Audio(audioUrl);
-        window.__activeAudioElement = audio;
+      const audio = getAudioElement();
+      if (audio) {
+        audio.pause();
 
-        audio.onplay = () => {
-          onStart?.();
-        };
+        const tryPlayFormat = (format: "m4a" | "mp3") => {
+          const audioUrl = `/audio/${lang}/${chapterId}_${beatIndex}.${format}`;
 
-        audio.onended = () => {
-          if (window.__activeAudioElement === audio) {
-            window.__activeAudioElement = null;
-          }
-          onEnd?.();
-        };
+          audio.onplay = null;
+          audio.onended = null;
+          audio.onerror = null;
 
-        audio.onerror = () => {
-          if (window.__activeAudioElement === audio) {
-            window.__activeAudioElement = null;
-          }
-          if (format === "m4a") {
-            // Try MP3 fallback
-            tryPlayFormat("mp3");
-          } else {
-            // Fallback to Web Speech API
-            speakWithWebSpeech(text, lang, onStart, onEnd, onError);
-          }
-        };
+          audio.onplay = () => {
+            onStart?.();
+          };
 
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {
+          audio.onended = () => {
+            onEnd?.();
+          };
+
+          audio.onerror = () => {
             if (format === "m4a") {
               tryPlayFormat("mp3");
             } else {
               speakWithWebSpeech(text, lang, onStart, onEnd, onError);
             }
-          });
-        }
-      };
+          };
 
-      tryPlayFormat("m4a");
-      return true;
+          audio.src = audioUrl;
+          window.__activeAudioElement = audio;
+
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((e) => {
+              if (format === "m4a") {
+                tryPlayFormat("mp3");
+              } else {
+                console.warn("[Audio] continuous play fallback to WebSpeech:", e);
+                speakWithWebSpeech(text, lang, onStart, onEnd, onError);
+              }
+            });
+          }
+        };
+
+        tryPlayFormat("m4a");
+        return true;
+      }
     } catch {
       // Fallback
     }

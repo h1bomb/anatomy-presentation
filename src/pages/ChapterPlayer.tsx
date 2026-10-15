@@ -9,6 +9,9 @@ import { ControlsDock } from "../components/ControlsDock.tsx";
 import { playSpeech, stopSpeech, unlockSpeechSynthesis } from "../utils/speech.ts";
 import type { Language, Theme } from "../types.ts";
 
+// Module-level interaction state: once user interacts, preserve across all route changes in the session
+let globalUserInteracted = false;
+
 export const ChapterPlayer: React.FC = () => {
   const { chapterId } = useParams<{ chapterId?: string }>();
   const navigate = useNavigate();
@@ -51,7 +54,12 @@ export const ChapterPlayer: React.FC = () => {
     return true;
   });
 
-  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
+  const [hasInteracted, setHasInteracted] = useState<boolean>(() => {
+    return (
+      globalUserInteracted ||
+      (typeof window !== "undefined" && Boolean(window.__speechUnlocked))
+    );
+  });
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
@@ -105,6 +113,12 @@ export const ChapterPlayer: React.FC = () => {
   const isPlayingRef = useRef<boolean>(isPlaying);
   isPlayingRef.current = isPlaying;
 
+  const isSpeakingRef = useRef<boolean>(isSpeaking);
+  isSpeakingRef.current = isSpeaking;
+
+  const isSpeechEnabledRef = useRef<boolean>(isSpeechEnabled);
+  isSpeechEnabledRef.current = isSpeechEnabled;
+
   const currentChIndexRef = useRef<number>(currentChapterIndex);
   currentChIndexRef.current = currentChapterIndex;
 
@@ -121,6 +135,8 @@ export const ChapterPlayer: React.FC = () => {
   const goToChapter = useCallback(
     (index: number, newTime: number = 0) => {
       unlockSpeechSynthesis();
+      globalUserInteracted = true;
+      setHasInteracted(true);
       const safeIndex = (index + CHAPTERS.length) % CHAPTERS.length;
       const targetCh = CHAPTERS[safeIndex];
       setTimeSec(newTime);
@@ -131,6 +147,8 @@ export const ChapterPlayer: React.FC = () => {
 
   const selectBeat = useCallback((idx: number) => {
     unlockSpeechSynthesis();
+    globalUserInteracted = true;
+    setHasInteracted(true);
     setTimeSec(idx * 10 + 0.1);
   }, []);
 
@@ -139,6 +157,7 @@ export const ChapterPlayer: React.FC = () => {
 
   const handleUnlockAndPlay = useCallback(() => {
     unlockSpeechSynthesis();
+    globalUserInteracted = true;
     setHasInteracted(true);
     if (isSpeechEnabled && isPlayingRef.current) {
       const text = t(activeBeat.scriptText, lang);
@@ -245,6 +264,14 @@ export const ChapterPlayer: React.FC = () => {
 
       if (isPlayingRef.current) {
         let nextTime = timeSecRef.current + dt;
+
+        // If speech is enabled and audio is still speaking near beat boundary, pace time so paragraph finishes naturally
+        const currentBIdx = getBeatIndex(timeSecRef.current);
+        const beatBoundary = (currentBIdx + 1) * 10;
+        if (isSpeechEnabledRef.current && isSpeakingRef.current && nextTime >= beatBoundary - 0.05) {
+          nextTime = beatBoundary - 0.05;
+        }
+
         if (nextTime >= 40) {
           const nextIndex = (currentChIndexRef.current + 1) % CHAPTERS.length;
           goToChapter(nextIndex, 0);
