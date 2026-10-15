@@ -5,7 +5,6 @@ import { TopBar } from "../components/TopBar.tsx";
 import { SlideNarrative } from "../components/SlideNarrative.tsx";
 import { IsometricStage } from "../components/IsometricStage.tsx";
 import { Teleprompter } from "../components/Teleprompter.tsx";
-import { ControlsDock } from "../components/ControlsDock.tsx";
 import { playSpeech, stopSpeech, unlockSpeechSynthesis } from "../utils/speech.ts";
 import type { Language, Theme } from "../types.ts";
 
@@ -464,6 +463,17 @@ export const ChapterPlayer: React.FC = () => {
         beatProgress={beatProgress}
         lang={lang}
         onSelectBeat={selectBeat}
+        isSpeechEnabled={isSpeechEnabled}
+        isSpeaking={isSpeaking}
+        hasInteracted={hasInteracted}
+        showSubtitles={showSubtitles}
+        theme={theme}
+        isFullscreen={isFullscreen}
+        onToggleSpeech={toggleSpeech}
+        onToggleLang={toggleLang}
+        onToggleSubtitles={toggleSubtitles}
+        onToggleTheme={toggleTheme}
+        onToggleFullscreen={toggleFullscreen}
       />
 
       {!hasInteracted && isSpeechEnabled && !isExportMode && (
@@ -493,6 +503,10 @@ export const ChapterPlayer: React.FC = () => {
         isExportMode={isExportMode}
         theme={theme}
         lang={lang}
+        isPlaying={isPlaying}
+        onPrevChapter={() => goToChapter(currentChapterIndex - 1, 0)}
+        onTogglePlay={togglePlay}
+        onNextChapter={() => goToChapter(currentChapterIndex + 1, 0)}
       />
 
       <SlideNarrative
@@ -515,27 +529,6 @@ export const ChapterPlayer: React.FC = () => {
         visible={showSubtitles}
         lang={lang}
         isSpeechEnabled={isSpeechEnabled}
-      />
-
-      <ControlsDock
-        currentChapterIndex={currentChapterIndex}
-        totalChapters={CHAPTERS.length}
-        isPlaying={isPlaying}
-        isSpeechEnabled={isSpeechEnabled}
-        isSpeaking={isSpeaking}
-        hasInteracted={hasInteracted}
-        theme={theme}
-        lang={lang}
-        showSubtitles={showSubtitles}
-        isFullscreen={isFullscreen}
-        onPrevChapter={() => goToChapter(currentChapterIndex - 1, 0)}
-        onNextChapter={() => goToChapter(currentChapterIndex + 1, 0)}
-        onTogglePlay={togglePlay}
-        onToggleSpeech={toggleSpeech}
-        onToggleTheme={toggleTheme}
-        onToggleLang={toggleLang}
-        onToggleSubtitles={toggleSubtitles}
-        onToggleFullscreen={toggleFullscreen}
       />
     </>
   );

@@ -235,9 +235,7 @@ html, body {
   font-size: 11px;
   color: var(--text-mid);
   letter-spacing: 0.08em;
-  max-width: 420px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   white-space: nowrap;
 }
 
@@ -561,17 +559,17 @@ html, body {
 .teleprompter-hud {
   position: absolute;
   left: 56px;
-  right: 780px;
-  bottom: 22px;
-  height: 64px;
+  right: 56px;
+  bottom: 20px;
+  height: 60px;
   background: var(--bg-glass);
   border: 1px solid var(--border-mid);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 20px;
   z-index: 28;
   backdrop-filter: blur(14px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
