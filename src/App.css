@@ -110,16 +110,27 @@ html, body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1920px;
-  height: 1080px;
+  width: var(--stage-w, 1920px);
+  height: var(--stage-h, 1080px);
   transform-origin: center center;
   transform: translate(-50%, -50%) scale(var(--stage-scale, 1));
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
+  box-shadow: none;
   background:
     radial-gradient(circle at 68% 52%, rgba(229, 169, 60, 0.055) 0%, rgba(243, 242, 237, 0.03) 34%, transparent 68%),
     linear-gradient(30deg, rgba(255,255,255,0.016) 1px, transparent 1px),
     linear-gradient(150deg, rgba(255,255,255,0.016) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px),
+    var(--bg-canvas);
+  background-size: 100% 100%, 64px 37px, 64px 37px, 64px 64px;
+}
+
+[data-theme="light"] .broll-viewport,
+.theme-light .broll-viewport {
+  background:
+    radial-gradient(circle at 68% 52%, rgba(180, 83, 9, 0.04) 0%, rgba(255, 255, 255, 0.4) 38%, transparent 70%),
+    linear-gradient(30deg, rgba(0,0,0,0.024) 1px, transparent 1px),
+    linear-gradient(150deg, rgba(0,0,0,0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.018) 1px, transparent 1px),
     var(--bg-canvas);
   background-size: 100% 100%, 64px 37px, 64px 37px, 64px 64px;
 }
@@ -140,10 +151,10 @@ html, body {
 }
 .corner-mark::before { top: 6px; left: 0; width: 14px; height: 1px; }
 .corner-mark::after { top: 0; left: 6px; width: 1px; height: 14px; }
-.corner-mark.tl { top: 22px; left: 22px; }
-.corner-mark.tr { top: 22px; right: 22px; }
-.corner-mark.bl { bottom: 22px; left: 22px; }
-.corner-mark.br { bottom: 22px; right: 22px; }
+.corner-mark.tl { top: 12px; left: 12px; }
+.corner-mark.tr { top: 12px; right: 12px; }
+.corner-mark.bl { bottom: 12px; left: 12px; }
+.corner-mark.br { bottom: 12px; right: 12px; }
 
 /* 1. Top Bar */
 .top-bar {
@@ -152,7 +163,7 @@ html, body {
   left: 0;
   right: 0;
   height: 82px;
-  padding: 0 56px;
+  padding: 0 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -220,6 +231,11 @@ html, body {
   border-radius: 1px;
   overflow: hidden;
   position: relative;
+}
+
+[data-theme="light"] .beat-seg,
+.theme-light .beat-seg {
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .beat-seg-fill {
@@ -347,9 +363,9 @@ html, body {
 .slide-narrative-col {
   position: absolute;
   top: 96px;
-  left: 56px;
+  left: 32px;
   width: 580px;
-  bottom: 108px;
+  bottom: 100px;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -417,7 +433,7 @@ html, body {
 .beat-card[data-state="done"] {
   opacity: 0.58;
   transform: translateX(0) scale(0.992);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--border-dim);
 }
 
 .beat-card[data-state="active"] {
@@ -493,6 +509,12 @@ html, body {
   gap: 6px;
 }
 
+[data-theme="light"] .metric-chip,
+.theme-light .metric-chip {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
 .metric-chip::before {
   content: "";
   width: 5px;
@@ -504,6 +526,12 @@ html, body {
 .beat-card[data-state="active"] .metric-chip {
   border-color: rgba(229, 169, 60, 0.45);
   background: rgba(229, 169, 60, 0.09);
+}
+
+[data-theme="light"] .beat-card[data-state="active"] .metric-chip,
+.theme-light .beat-card[data-state="active"] .metric-chip {
+  border-color: rgba(180, 83, 9, 0.42);
+  background: rgba(245, 158, 11, 0.11);
 }
 
 .takeaway-plate {
@@ -541,9 +569,9 @@ html, body {
 .isometric-stage-wrap {
   position: absolute;
   top: 96px;
-  right: 56px;
-  left: 660px;
-  bottom: 108px;
+  right: 32px;
+  left: 636px;
+  bottom: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -641,9 +669,9 @@ html, body {
 /* 4. Teleprompter */
 .teleprompter-hud {
   position: absolute;
-  left: 56px;
-  right: 56px;
-  bottom: 20px;
+  left: 32px;
+  right: 32px;
+  bottom: 18px;
   height: 60px;
   background: var(--bg-glass);
   border: 1px solid var(--border-mid);

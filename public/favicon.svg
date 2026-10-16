@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#111110"/>
+  <rect x="2" y="2" width="60" height="60" rx="12" stroke="#E5A93C" stroke-opacity="0.32" stroke-width="1.5"/>
+  <!-- Isometric Outer Mechanism Ring -->
+  <polygon points="32,8 54,20.7 54,43.3 32,56 10,43.3 10,20.7" fill="#1C1C19" stroke="#E5A93C" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Isometric Top Lit Face -->
+  <polygon points="32,14 48,23.2 32,32.5 16,23.2" fill="#2C2C28" stroke="#F3F2ED" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Isometric Left Face -->
+  <polygon points="16,23.2 32,32.5 32,50 16,40.8" fill="#21211E" stroke="#D6D5CE" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Isometric Right Shaded Face -->
+  <polygon points="32,32.5 48,23.2 48,40.8 32,50" fill="#151513" stroke="#94938B" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Center Escapement Axle Hub -->
+  <ellipse cx="32" cy="23.2" rx="5.5" ry="3.2" fill="#E5A93C" stroke="#111110" stroke-width="1.2"/>
+  <circle cx="32" cy="23.2" r="1.6" fill="#111110"/>
+  <!-- Precision Callout Tick Marks -->
+  <line x1="32" y1="4" x2="32" y2="8" stroke="#E5A93C" stroke-width="2" stroke-linecap="round"/>
+  <line x1="32" y1="56" x2="32" y2="60" stroke="#E5A93C" stroke-width="2" stroke-linecap="round"/>
+</svg>

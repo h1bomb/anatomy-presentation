@@ -305,7 +305,14 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
                 : "opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
             )}
           >
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900/80 dark:bg-neutral-950/85 backdrop-blur-md border border-white/15 shadow-2xl">
+            <div
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border transition-colors",
+                theme === "light"
+                  ? "bg-white/92 border-black/15 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+                  : "bg-neutral-900/85 border-white/15 shadow-2xl"
+              )}
+            >
               {/* Previous Page */}
               {onPrevChapter && (
                 <Tooltip>
@@ -314,7 +321,12 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={onPrevChapter}
-                      className="h-8 w-8 rounded-full text-neutral-300 hover:text-white hover:bg-white/15 active:scale-95 transition-all"
+                      className={cn(
+                        "h-8 w-8 rounded-full active:scale-95 transition-all",
+                        theme === "light"
+                          ? "text-neutral-700 hover:text-neutral-950 hover:bg-black/8"
+                          : "text-neutral-300 hover:text-white hover:bg-white/15"
+                      )}
                       aria-label="Previous Page"
                     >
                       <ChevronLeft className="size-4" />
@@ -326,7 +338,12 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
                 </Tooltip>
               )}
 
-              <div className="h-4 w-px bg-white/20 mx-0.5" />
+              <div
+                className={cn(
+                  "h-4 w-px mx-0.5",
+                  theme === "light" ? "bg-black/15" : "bg-white/20"
+                )}
+              />
 
               {/* Play / Pause */}
               <Tooltip>
@@ -336,10 +353,14 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
                     size="icon"
                     onClick={onTogglePlay}
                     className={cn(
-                      "h-9 w-9 rounded-full text-neutral-100 hover:text-white hover:bg-white/20 active:scale-95 transition-all",
-                      isPlaying
-                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                        : "bg-white/10"
+                      "h-9 w-9 rounded-full active:scale-95 transition-all",
+                      theme === "light"
+                        ? isPlaying
+                          ? "bg-amber-500/18 text-amber-800 border border-amber-600/45 hover:bg-amber-500/28 hover:text-amber-950"
+                          : "bg-black/6 text-neutral-800 hover:bg-black/12 hover:text-neutral-950"
+                        : isPlaying
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 hover:text-amber-200"
+                        : "bg-white/10 text-neutral-100 hover:bg-white/20 hover:text-white"
                     )}
                     aria-label={isPlaying ? "Pause" : "Play"}
                   >
@@ -363,7 +384,12 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
                 </TooltipContent>
               </Tooltip>
 
-              <div className="h-4 w-px bg-white/20 mx-0.5" />
+              <div
+                className={cn(
+                  "h-4 w-px mx-0.5",
+                  theme === "light" ? "bg-black/15" : "bg-white/20"
+                )}
+              />
 
               {/* Next Page */}
               {onNextChapter && (
@@ -373,7 +399,12 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={onNextChapter}
-                      className="h-8 w-8 rounded-full text-neutral-300 hover:text-white hover:bg-white/15 active:scale-95 transition-all"
+                      className={cn(
+                        "h-8 w-8 rounded-full active:scale-95 transition-all",
+                        theme === "light"
+                          ? "text-neutral-700 hover:text-neutral-950 hover:bg-black/8"
+                          : "text-neutral-300 hover:text-white hover:bg-white/15"
+                      )}
                       aria-label="Next Page"
                     >
                       <ChevronRight className="size-4" />

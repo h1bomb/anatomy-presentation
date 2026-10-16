@@ -12,7 +12,12 @@ export const App: React.FC = () => {
       const availW = window.innerWidth || document.documentElement.clientWidth || 1920;
       const availH = window.innerHeight || document.documentElement.clientHeight || 1080;
       const scale = Math.min(availW / baseW, availH / baseH);
+      const isExport = window.location.search.includes("export=1");
+      const stageW = isExport ? baseW : Math.round((availW / scale) * 100) / 100;
+      const stageH = isExport ? baseH : Math.round((availH / scale) * 100) / 100;
       document.documentElement.style.setProperty("--stage-scale", scale.toString());
+      document.documentElement.style.setProperty("--stage-w", `${stageW}px`);
+      document.documentElement.style.setProperty("--stage-h", `${stageH}px`);
     }
 
     fitViewport();
