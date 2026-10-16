@@ -5,7 +5,7 @@ import { TopBar } from "../components/TopBar.tsx";
 import { SlideNarrative } from "../components/SlideNarrative.tsx";
 import { IsometricStage } from "../components/IsometricStage.tsx";
 import { Teleprompter } from "../components/Teleprompter.tsx";
-import { playSpeech, stopSpeech, unlockSpeechSynthesis } from "../utils/speech.ts";
+import { playSpeech, stopSpeech, unlockSpeechSynthesis, getAudioElement } from "../utils/speech.ts";
 import type { Language, Theme } from "../types.ts";
 
 // Module-level interaction state: once user interacts, preserve across all route changes in the session
@@ -121,6 +121,9 @@ export const ChapterPlayer: React.FC = () => {
   const currentChIndexRef = useRef<number>(currentChapterIndex);
   currentChIndexRef.current = currentChapterIndex;
 
+  const lastSpokenKeyRef = useRef<string>("");
+  const activeSpeechTargetRef = useRef<string>("");
+
   // Clamped time and beat calculation
   const clampedTime = Math.max(0, Math.min(chapter.duration - 0.001, timeSec));
   const beatIndex = getBeatIndex(clampedTime);
@@ -138,6 +141,9 @@ export const ChapterPlayer: React.FC = () => {
       setHasInteracted(true);
       const safeIndex = (index + CHAPTERS.length) % CHAPTERS.length;
       const targetCh = CHAPTERS[safeIndex];
+      activeSpeechTargetRef.current = "";
+      isSpeakingRef.current = false;
+      timeSecRef.current = newTime;
       setTimeSec(newTime);
       navigate(`/${targetCh.id}`);
     },
@@ -148,11 +154,53 @@ export const ChapterPlayer: React.FC = () => {
     unlockSpeechSynthesis();
     globalUserInteracted = true;
     setHasInteracted(true);
-    setTimeSec(idx * 10 + 0.1);
+    const nextTime = idx * 10 + 0.02;
+    activeSpeechTargetRef.current = "";
+    isSpeakingRef.current = false;
+    timeSecRef.current = nextTime;
+    setTimeSec(nextTime);
   }, []);
 
-  // Web Speech API synthesis effect
-  const lastSpokenKeyRef = useRef<string>("");
+  const startBeatNarration = useCallback(
+    (chId: string, bIdx: number, textToSpeak: string, targetLang: Language) => {
+      const key = `${chId}:${bIdx}:${targetLang}`;
+      lastSpokenKeyRef.current = key;
+      activeSpeechTargetRef.current = `${chId}:${bIdx}`;
+      playSpeech(
+        textToSpeak,
+        targetLang,
+        () => {
+          isSpeakingRef.current = true;
+          setIsSpeaking(true);
+        },
+        () => {
+          isSpeakingRef.current = false;
+          setIsSpeaking(false);
+          if (
+            isPlayingRef.current &&
+            isSpeechEnabledRef.current &&
+            activeSpeechTargetRef.current === `${chId}:${bIdx}`
+          ) {
+            if (bIdx < 3) {
+              const nextBeatTime = (bIdx + 1) * 10 + 0.02;
+              timeSecRef.current = nextBeatTime;
+              setTimeSec(nextBeatTime);
+            } else {
+              const nextIndex = (currentChIndexRef.current + 1) % CHAPTERS.length;
+              goToChapter(nextIndex, 0);
+            }
+          }
+        },
+        () => {
+          isSpeakingRef.current = false;
+          setIsSpeaking(false);
+        },
+        chId,
+        bIdx
+      );
+    },
+    [goToChapter]
+  );
 
   const handleUnlockAndPlay = useCallback(() => {
     unlockSpeechSynthesis();
@@ -160,18 +208,9 @@ export const ChapterPlayer: React.FC = () => {
     setHasInteracted(true);
     if (isSpeechEnabled && isPlayingRef.current) {
       const text = t(activeBeat.scriptText, lang);
-      lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
-      playSpeech(
-        text,
-        lang,
-        () => setIsSpeaking(true),
-        () => setIsSpeaking(false),
-        undefined,
-        chapter.id,
-        beatIndex
-      );
+      startBeatNarration(chapter.id, beatIndex, text, lang);
     }
-  }, [isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex]);
+  }, [isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex, startBeatNarration]);
 
   // Global user interaction wakeup: unlock browser audio context on first touch/click
   useEffect(() => {
@@ -191,6 +230,8 @@ export const ChapterPlayer: React.FC = () => {
   useEffect(() => {
     if (!hasInteracted || !isSpeechEnabled || !isPlaying || isExportMode) {
       if (!isSpeechEnabled || !isPlaying || isExportMode) {
+        activeSpeechTargetRef.current = "";
+        isSpeakingRef.current = false;
         stopSpeech();
         setIsSpeaking(false);
       }
@@ -199,19 +240,20 @@ export const ChapterPlayer: React.FC = () => {
 
     const speechKey = `${chapter.id}:${beatIndex}:${lang}`;
     if (speechKey !== lastSpokenKeyRef.current) {
-      lastSpokenKeyRef.current = speechKey;
       const text = t(activeBeat.scriptText, lang);
-      playSpeech(
-        text,
-        lang,
-        () => setIsSpeaking(true),
-        () => setIsSpeaking(false),
-        undefined,
-        chapter.id,
-        beatIndex
-      );
+      startBeatNarration(chapter.id, beatIndex, text, lang);
     }
-  }, [hasInteracted, chapter.id, beatIndex, lang, isSpeechEnabled, isPlaying, isExportMode, activeBeat.scriptText]);
+  }, [
+    hasInteracted,
+    chapter.id,
+    beatIndex,
+    lang,
+    isSpeechEnabled,
+    isPlaying,
+    isExportMode,
+    activeBeat.scriptText,
+    startBeatNarration,
+  ]);
 
   // Clean speech when unmounting
   useEffect(() => {
@@ -234,6 +276,7 @@ export const ChapterPlayer: React.FC = () => {
       if (safeIndex !== currentChIndexRef.current) {
         navigate(`/${ch.id}`);
       }
+      timeSecRef.current = clamped;
       setTimeSec(clamped);
 
       return {
@@ -262,13 +305,26 @@ export const ChapterPlayer: React.FC = () => {
       lastWallTimeRef.current = now;
 
       if (isPlayingRef.current) {
+        const currentCh = CHAPTERS[currentChIndexRef.current] || CHAPTERS[0];
+        const currentBIdx = getBeatIndex(timeSecRef.current);
+        const beatStart = currentBIdx * 10;
+        const beatBoundary = (currentBIdx + 1) * 10;
+        const audio = getAudioElement();
+
         let nextTime = timeSecRef.current + dt;
 
-        // If speech is enabled and audio is still speaking near beat boundary, pace time so paragraph finishes naturally
-        const currentBIdx = getBeatIndex(timeSecRef.current);
-        const beatBoundary = (currentBIdx + 1) * 10;
-        if (isSpeechEnabledRef.current && isSpeakingRef.current && nextTime >= beatBoundary - 0.05) {
-          nextTime = beatBoundary - 0.05;
+        // Lock timeline progression to actual audio narration duration when active
+        if (
+          isSpeechEnabledRef.current &&
+          isSpeakingRef.current &&
+          activeSpeechTargetRef.current === `${currentCh.id}:${currentBIdx}`
+        ) {
+          if (audio && !audio.paused && Number.isFinite(audio.duration) && audio.duration > 0.5) {
+            const audioRatio = Math.max(0, Math.min(0.992, audio.currentTime / audio.duration));
+            nextTime = beatStart + audioRatio * 10;
+          } else if (nextTime >= beatBoundary - 0.05) {
+            nextTime = beatBoundary - 0.05;
+          }
         }
 
         if (nextTime >= 40) {
@@ -276,6 +332,7 @@ export const ChapterPlayer: React.FC = () => {
           goToChapter(nextIndex, 0);
           nextTime = 0;
         } else {
+          timeSecRef.current = nextTime;
           setTimeSec(nextTime);
         }
       }
@@ -298,19 +355,13 @@ export const ChapterPlayer: React.FC = () => {
         setIsPlaying((p) => {
           const next = !p;
           if (!next) {
+            activeSpeechTargetRef.current = "";
+            isSpeakingRef.current = false;
             stopSpeech();
             setIsSpeaking(false);
           } else if (isSpeechEnabled) {
             const text = t(activeBeat.scriptText, lang);
-            playSpeech(
-              text,
-              lang,
-              () => setIsSpeaking(true),
-              () => setIsSpeaking(false),
-              undefined,
-              chapter.id,
-              beatIndex
-            );
+            startBeatNarration(chapter.id, beatIndex, text, lang);
           }
           return next;
         });
@@ -336,7 +387,18 @@ export const ChapterPlayer: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasInteracted, currentChapterIndex, goToChapter, selectBeat, isSpeechEnabled, activeBeat.scriptText, lang]);
+  }, [
+    hasInteracted,
+    currentChapterIndex,
+    goToChapter,
+    selectBeat,
+    isSpeechEnabled,
+    activeBeat.scriptText,
+    lang,
+    chapter.id,
+    beatIndex,
+    startBeatNarration,
+  ]);
 
   const togglePlay = useCallback(() => {
     unlockSpeechSynthesis();
@@ -344,23 +406,17 @@ export const ChapterPlayer: React.FC = () => {
     setIsPlaying((p) => {
       const next = !p;
       if (!next) {
+        activeSpeechTargetRef.current = "";
+        isSpeakingRef.current = false;
         stopSpeech();
         setIsSpeaking(false);
       } else if (isSpeechEnabled) {
         const text = t(activeBeat.scriptText, lang);
-        playSpeech(
-          text,
-          lang,
-          () => setIsSpeaking(true),
-          () => setIsSpeaking(false),
-          undefined,
-          chapter.id,
-          beatIndex
-        );
+        startBeatNarration(chapter.id, beatIndex, text, lang);
       }
       return next;
     });
-  }, [hasInteracted, isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex]);
+  }, [hasInteracted, isSpeechEnabled, activeBeat.scriptText, lang, chapter.id, beatIndex, startBeatNarration]);
 
   const toggleSpeech = useCallback(() => {
     unlockSpeechSynthesis();
@@ -371,16 +427,7 @@ export const ChapterPlayer: React.FC = () => {
         localStorage.setItem("anatomy-speech", "1");
       } catch {}
       const text = t(activeBeat.scriptText, lang);
-      lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
-      playSpeech(
-        text,
-        lang,
-        () => setIsSpeaking(true),
-        () => setIsSpeaking(false),
-        undefined,
-        chapter.id,
-        beatIndex
-      );
+      startBeatNarration(chapter.id, beatIndex, text, lang);
       return;
     }
 
@@ -392,25 +439,18 @@ export const ChapterPlayer: React.FC = () => {
 
       if (next) {
         // User clicked to enable speech: speak immediately in user gesture call stack
-        lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${lang}`;
         const text = t(activeBeat.scriptText, lang);
-        playSpeech(
-          text,
-          lang,
-          () => setIsSpeaking(true),
-          () => setIsSpeaking(false),
-          undefined,
-          chapter.id,
-          beatIndex
-        );
+        startBeatNarration(chapter.id, beatIndex, text, lang);
       } else {
+        activeSpeechTargetRef.current = "";
+        isSpeakingRef.current = false;
         stopSpeech();
         setIsSpeaking(false);
         lastSpokenKeyRef.current = "";
       }
       return next;
     });
-  }, [hasInteracted, chapter.id, beatIndex, lang, activeBeat.scriptText]);
+  }, [hasInteracted, chapter.id, beatIndex, lang, activeBeat.scriptText, startBeatNarration]);
 
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
@@ -422,21 +462,12 @@ export const ChapterPlayer: React.FC = () => {
     setLang((l) => {
       const nextLang = l === "zh" ? "en" : "zh";
       if (isSpeechEnabled && isPlayingRef.current) {
-        lastSpokenKeyRef.current = `${chapter.id}:${beatIndex}:${nextLang}`;
         const text = t(activeBeat.scriptText, nextLang);
-        playSpeech(
-          text,
-          nextLang,
-          () => setIsSpeaking(true),
-          () => setIsSpeaking(false),
-          undefined,
-          chapter.id,
-          beatIndex
-        );
+        startBeatNarration(chapter.id, beatIndex, text, nextLang);
       }
       return nextLang;
     });
-  }, [hasInteracted, chapter.id, beatIndex, isSpeechEnabled, activeBeat.scriptText]);
+  }, [hasInteracted, chapter.id, beatIndex, isSpeechEnabled, activeBeat.scriptText, startBeatNarration]);
 
   const toggleSubtitles = useCallback(() => {
     setShowSubtitles((s) => !s);

@@ -12,10 +12,11 @@ export function tList(val: BilingualList | undefined, lang: Language = "zh"): st
   return val[lang] || val.zh || val.en || [];
 }
 
-export function getBeatIndex(tSec: number): number {
-  if (tSec < 10) return 0;
-  if (tSec < 20) return 1;
-  if (tSec < 30) return 2;
+export function getBeatIndex(timeSec: number): number {
+  const clamped = Math.max(0, Math.min(39.999, Number.isFinite(timeSec) ? timeSec : 0));
+  if (clamped < 10) return 0;
+  if (clamped < 20) return 1;
+  if (clamped < 30) return 2;
   return 3;
 }
 
@@ -26,21 +27,20 @@ export const CHAPTER_FIGURES: Record<string, (t: number, beat: number) => string
   ch04: (_t, beat) => ["press-and-pull", "profile", "one-context", "press-and-pull"][beat],
   ch05: (_t, beat) => ["lru-cache", "rate-limiter", "afterburner", "seasons"][beat],
   ch06: (_t, beat) => ["one-stage", "fit", "separable-blur", "lens-bench"][beat],
-  ch07: (t) => {
-    if (t < 8) return "hash-map";
-    if (t < 16) return "bloom-filter";
-    if (t < 24) return "mutex";
-    if (t < 32) return "tcp-handshake";
+  ch07: (t, beat) => {
+    if (beat === 0) return t < 5.5 ? "hash-map" : "bloom-filter";
+    if (beat === 1) return "mutex";
+    if (beat === 2) return "tcp-handshake";
     return "sampling";
   },
-  ch08: (_t, beat) => ["turbofan", "reactor", "afterburner", "turbofan"][beat],
+  ch08: (_t, beat) => ["turbofan", "iframe:raptor-engine.html", "iframe:raptor-engine.html", "turbofan"][beat],
   ch09: (_t, beat) => ["lit-by-facing", "easing", "turbofan", "three-reads"][beat],
   ch10: (_t, beat) => ["mark-sweep", "four-frames", "turbofan", "frosted-copy"][beat],
-  ch11: (_t, beat) => ["watch", "seasons", "power-station", "turbofan"][beat],
+  ch11: (_t, beat) => ["watch", "seasons", "iframe:raptor-engine.html", "turbofan"][beat],
   ch12: (_t, beat) => ["box-model", "spot-plate", "bevel-offset", "shared-canvas"][beat],
   ch13: (_t, beat) => ["debounce", "merge-sort", "gradient-descent", "flex-grow"][beat],
   ch14: (_t, beat) => ["foundry", "glass-furnace", "forge", "studio"][beat],
-  ch15: (_t, beat) => ["public-key", "seasons", "plasma-cutter", "tokamak"][beat],
+  ch15: (_t, beat) => ["public-key", "iframe:turning-dial.html", "plasma-cutter", "tokamak"][beat],
 };
 
 export function getActiveFigureKey(chapterId: string, tSec: number, beatIndex: number): string {
@@ -54,7 +54,7 @@ export const CHAPTERS: Chapter[] = [
     index: 0,
     number: "01",
     title: { zh: "一行字造一台机器", en: "A Machine from a Single Prompt" },
-    subtitle: { zh: "官方 FIGURE: WATCH MOVEMENT · 单行 PROMPT", en: "Official Figure: Watch Movement · One-Line Prompt" },
+    subtitle: { zh: "OFFICIAL FIGURE: WATCH MOVEMENT · ONE-LINE PROMPT", en: "Official Figure: Watch Movement · One-Line Prompt" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "watch",
@@ -71,12 +71,12 @@ export const CHAPTERS: Chapter[] = [
         if (beat === 0) return "OFFICIAL [watch] · 4 Hz · 28,800 vph · CROWN WINDING";
         if (beat === 1) return "KEY [S] · 1/20x SLOW SPEED · 15-TOOTH ESCAPE WHEEL";
         if (beat === 2) return "KEY [E] · BRIDGES LIFTED APART · 60:1 GEAR TRAIN";
-        return "BUILD 1h 54m · 0 HUMAN STROKES · 8,200+ STARS";
+        return "BUILD 1h 54m · 0 HUMAN STROKES · ★ 8,203";
       }
       if (beat === 0) return "OFFICIAL [watch] · 4 Hz · 28,800 vph · CROWN WINDING";
       if (beat === 1) return "KEY [S] · 1/20× SLOW SPEED · 15-TOOTH ESCAPE WHEEL";
       if (beat === 2) return "KEY [E] · BRIDGES LIFTED APART · 60:1 GEAR TRAIN";
-      return "BUILD 1h 54m · 0 人工绘图 · 8,200+ Stars";
+      return "BUILD 1h 54m · 0 人工绘图 · ★ 8,203";
     },
     beats: [
       {
@@ -84,12 +84,12 @@ export const CHAPTERS: Chapter[] = [
         end: 10,
         label: { zh: "00s · 上链储能", en: "00s · Winding & Energy" },
         headline: { zh: "拖动表冠上发条，动力储存逐格攀升", en: "Drag the crown to wind the mainspring, watch power reserve build" },
-        detail: { zh: "棘轮啮合旋转、棘爪止逆作响，发条盒游丝盘紧，动力储存实时涨向 38 小时。", en: "Ratchet teeth mesh with clicking pawls, barrel spring coils tight, power climbs towards 38 hours." },
+        detail: { zh: "棘轮啮合旋转、棘爪止逆作响，发条盒游丝盘紧，动力储存实时涨向 38 小时。", en: "Ratchet teeth mesh with clicking pawls, barrel spring coils tight, power reserve climbs towards 38 hours." },
         metrics: { zh: ["官方 watch 原版机芯", "表冠拖拽上发条", "棘轮+棘爪止逆联动"], en: ["Official watch movement", "Crown drag winding", "Ratchet & click mechanism"] },
         stageCue: "WATCH_WIND",
         scriptText: {
           zh: "先看一个东西。这是一块机械表的机芯。你可以拖动表冠上发条，棘轮转，棘爪响，动力储存一格一格涨上去。",
-          en: "Take a look at this. This is the caliber movement of a mechanical watch. Drag the crown to wind the spring, hear the pawl click, and watch the power reserve fill."
+          en: "Take a look at this. This is a mechanical watch movement. You can drag the crown to wind the mainspring: the ratchet turns, the click snaps, and the power reserve climbs notch by notch."
         }
       },
       {
@@ -97,12 +97,12 @@ export const CHAPTERS: Chapter[] = [
         end: 20,
         label: { zh: "10s · 慢镜擒纵", en: "10s · Slow-Mo Escapement" },
         headline: { zh: "按 S 键放慢至 1/20，看清半齿释放", en: "Press S to slow down to 1/20x and observe half-tooth escapement release" },
-        detail: { zh: "时间流速降至二十分之一，双叉瓦擒纵叉精准卡入 15 齿擒纵轮，每次摆动恰好放行半个齿距。", en: "Time slows by 20x, ruby pallet jewels lock into the 15-tooth escape wheel, releasing exactly half a pitch per swing." },
+        detail: { zh: "时间流速降至二十分之一，双叉瓦擒纵叉精准卡入 15 齿擒纵轮，每次摆动恰好放行半个齿距。", en: "Time slows by 20x: ruby pallet jewels lock into the 15-tooth escape wheel, releasing half a tooth per swing." },
         metrics: { zh: ["KEY [S] · 1/20× 慢镜", "15 齿擒纵轮", "单次放行 0.5 齿"], en: ["Key [S] · 1/20x Slow-Mo", "15-tooth escape wheel", "0.5 tooth release per beat"] },
         stageCue: "WATCH_SLOW",
         scriptText: {
           zh: "按一下S键，时间放慢到二十分之一，你能看到擒纵叉把十五齿的擒纵轮，一次放过去半个齿。",
-          en: "Press the S key to slow time down to one-twentieth. Watch the pallet fork release the 15-tooth escape wheel half a tooth at a time."
+          en: "Press the S key, and time slows down to one-twentieth. You can watch the pallet fork let the fifteen-tooth escape wheel slip past half a tooth at a time."
         }
       },
       {
@@ -110,25 +110,25 @@ export const CHAPTERS: Chapter[] = [
         end: 30,
         label: { zh: "20s · 夹板拆解", en: "20s · Exploded Bridges" },
         headline: { zh: "按 E 键升起夹板，真实齿轮比全公开", en: "Press E to lift the bridges and expose authentic gear reduction ratios" },
-        detail: { zh: "上夹板与摆轮夹板沿定位立柱平稳抬升，底层轮系一览无余：秒轮一分钟一圈，中心轮一小时一圈。", en: "Top plates and balance cock lift on guide pillars, exposing the underlying gear train: fourth wheel 1 rpm, center wheel 1 rph." },
+        detail: { zh: "上夹板与摆轮夹板沿定位立柱平稳抬升，底层轮系一览无余：秒轮一分钟一圈，中心轮一小时一圈。", en: "Top plates and balance cock lift on guide pillars, exposing the gear train: fourth wheel 1 rpm, center wheel 1 rph." },
         metrics: { zh: ["KEY [E] · 夹板抬升", "秒轮 1 r/min", "中心轮 1 r/hour"], en: ["Key [E] · Exploded Bridges", "Fourth wheel 1 rpm", "Center wheel 1 rph"] },
         stageCue: "WATCH_APART",
         scriptText: {
           zh: "再按E键，夹板升起来，下面的轮系露出来，齿轮比例全是真的，秒轮一分钟一圈，中心轮一小时一圈。",
-          en: "Press the E key to elevate the bridges. The complete gear train is revealed beneath with accurate mechanical gear ratios."
+          en: "Press the E key, and the bridges lift apart to reveal the gear train underneath. Every gear ratio is authentic: the seconds wheel turns once a minute, the center wheel once an hour."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 一次成型", en: "30s · Zero-Human Generation" },
-        headline: { zh: "无人手绘：来自一行 Prompt 的工程奇迹", en: "Zero human drafting: An engineering marvel prompted by a single sentence" },
-        detail: { zh: "Prompt: “解释机械表怎么计时” —— Claude 独立运转 1 小时 54 分钟一次成型，Anatomy 开源 6 天突破 8,200 星。", en: "Prompt: 'Explain how a mechanical watch keeps time' — Claude worked autonomously for 1h 54m in one shot. Anatomy hit 8,200+ stars in 6 days." },
-        metrics: { zh: ["耗时 1h 54m 一次成型", "Claude Code 技能", "6 天 8,200+ Stars"], en: ["1h 54m autonomous run", "Claude Code skill", "8,200+ stars in 6 days"] },
+        label: { zh: "30s · 一次成型", en: "30s · One-Shot Generation" },
+        headline: { zh: "无人手绘：来自一行 Prompt 的工程奇迹", en: "Zero human drafting: An engineering marvel from a single prompt" },
+        detail: { zh: "Prompt: “解释机械表怎么计时” —— Claude 独立运转 1 小时 54 分钟一次成型，Anatomy 开源 6 天突破 8,200 星。", en: "Prompt: 'Explain how a mechanical watch tells time' — Claude worked autonomously for 1h 54m in one shot. Anatomy hit 8,200+ stars in 6 days." },
+        metrics: { zh: ["耗时 1h 54m 一次成型", "Claude Code 技能", "6 天 8,200+ Stars"], en: ["1h 54m one-shot build", "Claude Code skill", "8,200+ stars in 6 days"] },
         stageCue: "WATCH_FULL",
         scriptText: {
           zh: "这块表没有任何人画过。它来自一行字：解释机械表怎么计时。Claude自己干了一小时五十四分钟，一次成型。做出它的，是一个叫Anatomy的Claude Code技能。上线六天，GitHub八千多星。这期视频，从原理到实践，把它讲透。",
-          en: "No human artist drew this watch. It came from a single prompt: explain how a mechanical watch tells time. Claude ran for 1 hour 54 minutes straight to produce it."
+          en: "No human ever drew this watch. It came from a single line: explain how a mechanical watch tells time. Claude built it in 1 hour and 54 minutes in one shot, powered by a Claude Code skill called Anatomy — 8,200 stars in six days."
         }
       }
     ]
@@ -137,82 +137,82 @@ export const CHAPTERS: Chapter[] = [
     id: "ch02",
     index: 1,
     number: "02",
-    title: { zh: "方块和箭头的老问题", en: "The Flaw of Boxes and Arrows" },
+    title: { zh: "方块和箭头的老问题", en: "The Old Problem with Boxes and Arrows" },
     subtitle: { zh: "OFFICIAL FIGURES: MESSAGE-QUEUE · DNS · PROCESS-PUMP · GIT-MERGE", en: "Official Figures: Message Queue · DNS · Process Pump · Git Merge" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "message-queue",
     thesis: {
       zh: "方块只告诉你部件存在，箭头把最关键的“怎么动”丢给读者脑补。",
-      en: "Boxes only declare parts exist; arrows leave the most critical question — how it moves — to the reader's imagination."
+      en: "Boxes only tell you parts exist; arrows leave the crucial question — how it moves — to the reader's imagination."
     },
     takeaway: {
       zh: "画出那个东西本身 —— 读者不用脑补，伸手玩一遍就懂了",
-      en: "Draw the machine itself — no guessing needed, interact and understand immediately"
+      en: "Draw the machine itself — no guessing needed, reach out and play with it once to understand"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
         if (beat === 0) return "OFFICIAL [message-queue] · MARBLE RUN ESCAPEMENT";
-        if (beat === 1) return "OFFICIAL [dns] · GRAVITY CHUTE MULTI-TIER ROUTING";
-        if (beat === 2) return "OFFICIAL [process-pump] · HYDRAULIC PRESSURE CHAMBER";
-        return "OFFICIAL [git-merge] · CONVEYOR BELT MERGE JUNCTION";
+        if (beat === 1) return "OFFICIAL [dns] · PNEUMATIC TUBE CARRIER ROUTING";
+        if (beat === 2) return "OFFICIAL [process-pump] · REAL PISTON & VALVE ACTUATION";
+        return "OFFICIAL [git-merge] · HANDS-ON MECHANISM";
       }
-      if (beat === 0) return "OFFICIAL [message-queue] · 滚珠轨道重力擒纵";
-      if (beat === 1) return "OFFICIAL [dns] · 多级重力滑槽路由";
-      if (beat === 2) return "OFFICIAL [process-pump] · 液压腔体压力反馈";
-      return "OFFICIAL [git-merge] · 双轨传送带合并节点";
+      if (beat === 0) return "OFFICIAL [message-queue] · 弹珠滑道擒纵队列";
+      if (beat === 1) return "OFFICIAL [dns] · 气动管道胶囊寻址路由";
+      if (beat === 2) return "OFFICIAL [process-pump] · 真实活塞与阀门驱动";
+      return "OFFICIAL [git-merge] · 轨道合流拨叉分拣";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 消息队列", en: "00s · Message Queue" },
-        headline: { zh: "滚珠入仓：削峰填谷的机械直觉", en: "Marbles enter the hopper: The mechanical intuition of peak-shaving" },
-        detail: { zh: "并发消息化作密集落下的钢珠，漏斗缓冲暂存，擒纵爪匀速放行给后端处理工位。", en: "Concurrent messages turn into falling steel marbles, buffered in the hopper and metered out evenly by the escapement." },
-        metrics: { zh: ["高并发滚珠流", "缓冲漏斗削峰", "擒纵爪匀速释放"], en: ["High-concurrency marble flow", "Buffer hopper peak shaving", "Escapement metered release"] },
-        stageCue: "MQ_MARBLE",
+        label: { zh: "00s · 流程图困局", en: "00s · The Diagram Trap" },
+        headline: { zh: "讲消息队列或网络寻址，为什么以前总是方块加箭头？", en: "Why did we always explain queues or handshakes with boxes and arrows?" },
+        detail: { zh: "方块只声明模块存在，单向箭头暗示某种联系，但真正的动态机制在静态框图里完全缺席。", en: "Boxes merely declare components exist and arrows hint at motion, leaving actual dynamics completely absent." },
+        metrics: { zh: ["官方 message-queue 弹珠轨", "告别静态方块箭头", "真实重力滑道排队"], en: ["Official message-queue marble track", "Goodbye static boxes & arrows", "Real gravity chute queueing"] },
+        stageCue: "MARBLE_QUEUE",
         scriptText: {
-          zh: "过去二十年，我们画架构图就是方块连箭头。消息队列画个方块，写个MQ，然后画三个箭头指向三个消费者方块。可是，削峰填谷是怎么削的？背压是怎么传导的？",
-          en: "For twenty years, architecture diagrams were just boxes and arrows. A box labeled MQ with three arrows. But how does peak shaving actually work? How does backpressure propagate?"
+          zh: "你可能遇到过这种情况。想给别人讲清一个技术概念，哈希冲突也好，TCP握手也好，画出来的都是方块加箭头。方块告诉你部件存在，箭头代表某种运动，运动本身全靠读者脑补。",
+          en: "You've probably faced this before. Whether explaining hash collisions or TCP handshakes, we draw boxes and arrows. Boxes say parts exist, arrows imply motion, and the reader has to imagine how it actually moves."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · DNS 递归", en: "10s · DNS Recursion" },
-        headline: { zh: "重力滑槽逐级分流，根域到权威全可视", en: "Gravity chutes branch step by step, from root to authoritative servers" },
-        detail: { zh: "滚珠从根域滑槽滚入顶级域分拣器，再落入权威服务器抽屉，递归解析一目了然。", en: "A marble rolls from the root chute into the TLD sorter and drops into the authoritative drawer, making recursive lookup obvious." },
-        metrics: { zh: ["根域名滑槽", "TLD 顶级分拣器", "权威抽屉落入"], en: ["Root domain chute", "TLD branch sorter", "Authoritative drawer"] },
-        stageCue: "DNS_CHUTE",
+        label: { zh: "10s · 脑补的歧义", en: "10s · Ambiguity of Guessing" },
+        headline: { zh: "A 指向 B 的箭头：是推送、拉取还是轮询？", en: "An arrow from A to B: Is it push, pull, or polling?" },
+        detail: { zh: "一千个读者脑补出一千种时序。换成官方 DNS 气动管道机，请求胶囊如何逐级寻址投递一目了然。", en: "Every reader imagines a different sequence. In the official DNS pneumatic tube machine, capsule routing is unmistakable." },
+        metrics: { zh: ["官方 dns 气动管道机", "消除推/拉/轮询歧义", "物理管道因果闭环"], en: ["Official dns pneumatic tubes", "Eliminates push/pull/poll ambiguity", "Physical causal loop"] },
+        stageCue: "DNS_TUBES",
         scriptText: {
-          zh: "DNS递归解析呢？画五个方块绕一圈。读者看懂了吗？根本没有。Anatomy画的是滑槽，滚珠从根域滑到顶级域，再掉进权威服务器的抽屉里。",
-          en: "And DNS recursive lookup? Drawing five boxes in a circle teaches nothing. Anatomy renders a physical gravity chute rolling from root to TLD to authoritative drawers."
+          zh: "脑补这件事最麻烦的地方在于，每个人补出来的都不一样。一个箭头从A指向B，到底是推送、拉取还是轮询，图里根本没有答案。看完的人点点头，其实什么都没带走。",
+          en: "The trouble with imagination is that everyone pictures something different. Does an arrow from A to B mean push, pull, or poll? The diagram never says. People nod along and walk away with nothing."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 进程与管道", en: "20s · Process & Pipe" },
-        headline: { zh: "活塞推压与液压传导，背压机制直观呈现", en: "Piston compression and hydraulic transfer bring backpressure to life" },
-        detail: { zh: "上游进程如液压活塞下压流体，下游消费慢时管路压力指针飙红，阻塞物理化。", en: "Upstream processes act like hydraulic pistons; when downstream consumption slows, pressure gauges spike red." },
-        metrics: { zh: ["液压活塞泵", "管道流体阻尼", "压力表背压显影"], en: ["Hydraulic piston pump", "Pipeline fluid damping", "Pressure gauge visualization"] },
-        stageCue: "PUMP_BACKPRESSURE",
+        label: { zh: "20s · 造出实体机器", en: "20s · Build the Real Thing" },
+        headline: { zh: "Ryan 的解法：直接让 AI 画出那个东西本身", en: "Ryan's solution: Have AI draw the working mechanism itself" },
+        detail: { zh: "切入官方 process-pump 进程水泵机：一台真实的机器，阀门怎么开、活塞怎么动，概念就是什么样。", en: "Enter the official process-pump: a real machine where how valves open and pistons stroke is the concept itself." },
+        metrics: { zh: ["官方 process-pump 水泵", "零件运动 = 概念本身", "实时物理状态读数"], en: ["Official process-pump rig", "Part motion = the concept", "Live physical readouts"] },
+        stageCue: "PROCESS_PUMP",
         scriptText: {
-          zh: "进程间通信不是一根虚线，而是一根充满液压油的管道。上游压得太快，下游处理不过来，压力表的指针当场飙红。",
-          en: "Inter-process communication is not a dotted line; it is a pressurized hydraulic conduit. Push too fast upstream, and the dial spikes red."
+          zh: "开发者Ryan对这件事忍了很久。他的想法很直接，让AI画出那个东西本身。一台真实的机器，零件怎么动，概念就是什么样。",
+          en: "Developer Ryan was fed up with this. His idea was simple: make AI draw the thing itself. A real machine where the way the parts move is the concept."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · Git 分支合并", en: "30s · Git Merge" },
-        headline: { zh: "双轨传送带汇入主线，冲突变道清晰可见", en: "Dual conveyor belts merge into main, resolving branch conflicts visually" },
-        detail: { zh: "特性分支与主分支在机械交汇点合流，三方合并算法化为履带拨叉的分拣动作。", en: "Feature and main tracks merge at a physical switch point, turning three-way merge logic into mechanical sorting arms." },
-        metrics: { zh: ["双轨传送带", "机械分拣拨叉", "冲突传感器示警"], en: ["Dual conveyor tracks", "Mechanical sorting arm", "Conflict sensor alert"] },
-        stageCue: "GIT_TRACK",
+        label: { zh: "30s · 伸手即懂", en: "30s · Touch and Understand" },
+        headline: { zh: "零件怎么动，概念就是什么样", en: "No imagination needed: Play with it once and it clicks" },
+        detail: { zh: "切入官方 git-merge 轨道合流机：读者完全不用脑补，伸手拨动一次开关就彻底懂了。", en: "Switch to the official git-merge track junction: readers don't have to guess — flip the switch once and understand." },
+        metrics: { zh: ["官方 git-merge 合流轨", "零脑补歧义", "伸手玩一遍即懂"], en: ["Official git-merge junction", "Zero mental guesswork", "Hands-on comprehension"] },
+        stageCue: "GIT_MERGE",
         scriptText: {
-          zh: "Git合并画成两条传送带汇入主轨，读者一眼看懂为什么会有冲突，以及快进合并为什么不需要动传送带的分拣手臂。",
-          en: "Git merge is rendered as two conveyor belts joining the main line. Viewers instantly see why conflicts occur and why fast-forwards require no sorting action."
+          zh: "读者不用脑补，伸手玩一遍就懂了。",
+          en: "Readers don't have to guess in their heads — they reach out, play with it once, and get it immediately."
         }
       }
     ]
@@ -227,76 +227,76 @@ export const CHAPTERS: Chapter[] = [
     stageType: "official-pkg",
     machineKey: "computer",
     thesis: {
-      zh: "Anatomy 不是代码库，是一个赋予 Claude '机械设计直觉' 的技能指令包。",
-      en: "Anatomy is not a library; it is a skill bundle imparting mechanical design intuition to Claude."
+      zh: "一句话生成可交互等轴测机器插图，MIT 开源，全平台 Agent 通用。",
+      en: "Turn a single sentence into an interactive isometric machine — MIT open-source across coding agents."
     },
     takeaway: {
-      zh: "把代码世界翻译为物理世界 · 57KB 纯指令撬动复杂工程建模",
-      en: "Translating code into physical machinery · 57KB of instructions driving intricate engineering"
+      zh: "npx skills add wheresryan22/anatomy · 工程与艺术的交汇点",
+      en: "npx skills add wheresryan22/anatomy · Where engineering meets art"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [computer] · 8-BIT MECHANICAL CPU · ALU ACCUMULATOR";
-        if (beat === 1) return "OFFICIAL [binary-search] · LOG2(N) MECHANICAL COMPARATOR BALANCE";
-        if (beat === 2) return "OFFICIAL [b-tree] · MULTI-WAY BALANCED SPLITTING CONVEYOR";
-        return "ANATOMY CORE · 57KB SKILL.MD · ZERO NPM RUNTIME DEPENDENCY";
+        if (beat === 0) return "OFFICIAL [computer] · 1984 DESK COMPUTER · MIT LICENSE";
+        if (beat === 1) return "OFFICIAL [binary-search] · 33 MACHINES IN GALLERY";
+        if (beat === 2) return "OFFICIAL [b-tree] · CLAUDE CODE / OPENCODE / CODEX";
+        return "OFFICIAL [computer] · 85 SOLIDS · ENGINEERING OR ART?";
       }
-      if (beat === 0) return "OFFICIAL [computer] · 8-BIT 机械计算架构 · ALU 累加器";
-      if (beat === 1) return "OFFICIAL [binary-search] · LOG2(N) 机械天平比较器";
-      if (beat === 2) return "OFFICIAL [b-tree] · 多路平衡自平衡分拣履带";
-      return "ANATOMY CORE · 57KB SKILL.MD · 零 NPM 运行时依赖";
+      if (beat === 0) return "OFFICIAL [computer] · 1984 桌面电脑 · MIT 免费开源";
+      if (beat === 1) return "OFFICIAL [binary-search] · 实验室天平 · 官网 33 台机器";
+      if (beat === 2) return "OFFICIAL [b-tree] · 旋转卡片柜 · 跨平台一键安装";
+      return "OFFICIAL [computer] · 85 个实体 · 工程还是艺术？";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 技能定位", en: "00s · Skill Definition" },
-        headline: { zh: "不是 NPM 库，而是注入 AI 脑中的机械设计直觉", en: "Not an NPM library, but mechanical intuition injected into AI" },
-        detail: { zh: "Anatomy 本质是一份精心调优的 SKILL.md，向 LLM 讲授等轴测透视、光照模型与物理隐喻法则。", en: "Anatomy is an engineered SKILL.md teaching isometric perspective, shading models, and mechanical metaphor rules to LLMs." },
-        metrics: { zh: ["Claude Code 扩展技能", "57KB 纯文本指导", "零框架运行时侵入"], en: ["Claude Code extension skill", "57KB pure guidance", "Zero framework runtime intrusion"] },
-        stageCue: "CPU_ALU",
+        label: { zh: "00s · 开源诞生", en: "00s · Open-Source Release" },
+        headline: { zh: "10月8日开源的 Agent Skill，MIT 协议完全免费", en: "An Agent Skill open-sourced on Oct 8 under the free MIT License" },
+        detail: { zh: "输入一句话，Anatomy 驱动大模型发明一台实体机器来解释概念，输出可拖拽、可按键的等轴测插图。", en: "Give it one sentence, and Anatomy guides Claude to invent a machine explaining it — draggable, pressable, and rotatable." },
+        metrics: { zh: ["官方 computer 桌面电脑", "MIT License 免费开源", "拖 / 按 / 转全交互"], en: ["Official computer figure", "MIT License free & open", "Drag, press, and turn"] },
+        stageCue: "CRT_INTRO",
         scriptText: {
-          zh: "许多人以为 Anatomy 是个新的前端动画库。完全不是。它没有 npm install，没有 runtime。它是给 Claude Code 用的一个技能，文件大小只有 57KB。",
-          en: "Many assume Anatomy is a new animation library. It isn't. No npm package, no runtime. It is a 57KB skill file for Claude Code."
+          zh: "Anatomy是Ryan在10月8日开源的Agent Skill，MIT协议，免费。你给它一句话，它让Claude发明一台机器来解释这句话，产出一张能上手玩的等轴测插图。拖、按、转，都支持。",
+          en: "Anatomy is an Agent Skill open-sourced by Ryan on October 8 under the MIT license, completely free. Give it a sentence, and Claude invents a hands-on isometric machine you can drag, press, and turn."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 物理映射", en: "10s · Physical Mapping" },
-        headline: { zh: "将抽象数据结构还原为可触碰的传动机构", en: "Restoring abstract data structures into tactile mechanical transmissions" },
-        detail: { zh: "二叉搜索变成物理杠杆天平，B 树节点裂变成带分流道岔的多路履带，算力化为扭矩。", en: "Binary search becomes a mechanical balance scale; B-tree node splits become track switches, and compute turns into torque." },
-        metrics: { zh: ["二叉天平折半比较", "B树节点履带分流", "扭矩映射计算负载"], en: ["Binary scale half-splits", "B-Tree conveyor branches", "Torque maps compute load"] },
-        stageCue: "BS_BALANCE",
+        label: { zh: "10s · 33台机器图集", en: "10s · 33-Machine Gallery" },
+        headline: { zh: "从二分查找天平到涡扇发动机，官网已收录 33 台机器", en: "33 machines in the official gallery, from binary search scales to turbofans" },
+        detail: { zh: "舞台切入官方 binary-search（二分查找实验室天平）：砝码逐级折半称量，精准映射算法收敛过程。", en: "Stage switches to official binary-search: a precision lab balance halving weights step by step." },
+        metrics: { zh: ["官方 binary-search 天平", "33 台官方展品", "算法 → 航空重工"], en: ["Official binary-search balance", "33 official gallery machines", "Algorithms to aerospace"] },
+        stageCue: "BINARY_BALANCE",
         scriptText: {
-          zh: "这 57KB 的提示词教会了 Claude 一件事：世界上任何抽象的代码概念，都能在物理世界找到一个对应的机械结构。",
-          en: "This 57KB prompt teaches Claude one fundamental rule: any abstract software concept maps to a tangible physical mechanism."
+          zh: "到现在，官网图集里躺着33台机器，从二分查找到涡轮风扇发动机都有。",
+          en: "Right now, 33 machines sit in the official gallery — ranging from binary search all the way to a turbofan jet engine."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 等轴测美学", en: "20s · Isometric Aesthetic" },
-        headline: { zh: "30度轴测投影，工业灰配合醒目点缀", en: "30-degree isometric projection with industrial gray and vivid accents" },
-        detail: { zh: "严格遵循 30° 等轴测投影，采用铸铁深灰搭配安全橙与机床黄，赋予技术图表精密仪器质感。", en: "Strictly adheres to 30-degree isometric projection, blending cast iron dark grays with safety orange and machine yellow." },
-        metrics: { zh: ["30° 经典等轴测角", "三色工业调色板", "SVG 无损矢量缩放"], en: ["30° classic isometric angle", "Tri-color industrial palette", "SVG lossless vector scaling"] },
-        stageCue: "BTREE_SPLIT",
+        label: { zh: "20s · 跨端一键安装", en: "20s · One-Command Install" },
+        headline: { zh: "通吃 Claude Code、OpenCode 与 Codex", en: "Runs in Claude Code, OpenCode, and Codex with a single command" },
+        detail: { zh: "舞台切入官方 b-tree（B树旋转卡片柜）：一行命令 npx skills add wheresryan22/anatomy 即可全局加载。", en: "Stage switches to official b-tree rotary card index: install via npx skills add wheresryan22/anatomy." },
+        metrics: { zh: ["官方 b-tree 旋转卡片柜", "Claude Code / OpenCode / Codex", "npx skills add 一键装"], en: ["Official b-tree rotary file", "Claude Code / OpenCode / Codex", "One-line npx skills add"] },
+        stageCue: "BTREE_ROTARY",
         scriptText: {
-          zh: "它甚至规定了三十度等轴测视角、冷暖光源的分层反射、以及严苛的工业铸铁配色标准。",
-          en: "It even standardizes 30-degree isometric angles, directional lighting layers, and rigorous cast-iron color palettes."
+          zh: "它不只跑在Claude Code里，OpenCode和Codex也能加载。安装一条命令，npx skills add wheresryan22/anatomy。",
+          en: "It doesn't just run in Claude Code; OpenCode and Codex can load it too. Installation takes a single command: npx skills add wheresryan22 slash anatomy."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 即刻可用", en: "30s · Instant Execution" },
-        headline: { zh: "一行文字输入，端到端交付高精度动效 SVG", en: "Single prompt input, end-to-end delivery of high-precision animated SVG" },
-        detail: { zh: "无需配置 CAD 或 3D 建模环境，Claude 直接在终端生成纯原生 SVG 与 CSS 关键帧动画。", en: "No CAD or 3D setup required; Claude generates pure native SVG and CSS keyframe animations right in your terminal." },
-        metrics: { zh: ["零 CAD 建模要求", "纯原生 SVG+CSS", "直接嵌入 Web 应用"], en: ["Zero CAD requirements", "Native SVG+CSS", "Direct web embedding"] },
-        stageCue: "CPU_CYCLE",
+        label: { zh: "30s · 工程还是艺术", en: "30s · Engineering or Art?" },
+        headline: { zh: "有人说这是工程，有人说是艺术", en: "Some call it engineering; others call it art" },
+        detail: { zh: "回到官方 1984 桌面电脑：连键盘敲击与 CRT 显像管关机坍缩成中心亮点的物理细节都严丝合缝。", en: "Back to the 1984 desk computer: even the keystrokes and CRT phosphor collapse on power-off are modeled to perfection." },
+        metrics: { zh: ["官方 computer 实时渲染", "CRT 关机坍缩物理细节", "工程 × 艺术"], en: ["Official computer live render", "CRT phosphor power-off physics", "Engineering meets art"] },
+        stageCue: "CRT_POWER",
         scriptText: {
-          zh: "你只要对 Claude 说一句话，它就自动调度空间坐标、绘制几何体、拼接零件、加上键盘交互，直接吐出可以直接运行的网页。",
-          en: "You give Claude a single prompt, and it calculates spatial geometry, coordinates parts, adds interactive hooks, and yields ready-to-run web components."
+          zh: "有人说这是工程，有人说是艺术，你怎么看，打在公屏上。",
+          en: "Some call this engineering, others call it art. What do you think? Drop your thoughts in the comments."
         }
       }
     ]
@@ -305,82 +305,82 @@ export const CHAPTERS: Chapter[] = [
     id: "ch04",
     index: 3,
     number: "04",
-    title: { zh: "物体就是解释", en: "Objects are the Explanation" },
+    title: { zh: "物体就是解释", en: "The Object is the Explanation" },
     subtitle: { zh: "OFFICIAL FIGURES: PRESS-AND-PULL · PROFILE · ONE-CONTEXT", en: "Official Figures: Press & Pull · Profile · One Context" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "press-and-pull",
     thesis: {
-      zh: "真正高超的解释不需要旁白：观察机件的几何咬合，因果关系不言自明。",
-      en: "True explanatory mastery needs no narrator: observe the interlocking teeth, and causality is evident."
+      zh: "SKILL.md 第一条铁律：不许画方块，不许画箭头，不许让标签飘在空中。",
+      en: "The first law at the top of SKILL.md: No boxes, no arrows, and no labels floating in thin air."
     },
     takeaway: {
-      zh: "几何咬合取代文本描述 · 动态因果链自我证明",
-      en: "Geometric mesh replaces prose · Dynamic causal chains prove themselves"
+      zh: "造一台叫得出名字的机器，一堆小零件，每个零件都有活干",
+      en: "Build a recognizable machine of many small parts where every single part has a job to do"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [press-and-pull] · CAM INTERLOCK & DIE STAMPING";
-        if (beat === 1) return "OFFICIAL [profile] · STEPPED CONTOUR TURNING TOOL";
-        if (beat === 2) return "OFFICIAL [one-context] · CYLINDRICAL COAXIAL SPINDLE";
-        return "MECHANICAL EPISTEMOLOGY · FORM FOLLOWS FUNCTION";
+        if (beat === 0) return "OFFICIAL [press-and-pull] · THE OBJECT IS THE EXPLANATION";
+        if (beat === 1) return "OFFICIAL [profile] · CONTOUR GAUGE PINS · NO FLAT SLABS";
+        if (beat === 2) return "OFFICIAL [one-context] · 16-WELL GANTRY PLOTTER";
+        return "OFFICIAL [press-and-pull] · 53 SOLIDS · 4x ZOOM QUALITY BAR";
       }
-      if (beat === 0) return "OFFICIAL [press-and-pull] · 凸轮联动与冲压模具";
-      if (beat === 1) return "OFFICIAL [profile] · 台阶轮廓仿形切削刀架";
-      if (beat === 2) return "OFFICIAL [one-context] · 圆柱同轴旋转主轴";
-      return "机械认识论 · 形式紧随功能";
+      if (beat === 0) return "OFFICIAL [press-and-pull] · 物体就是解释 · 弹簧按键测试台";
+      if (beat === 1) return "OFFICIAL [profile] · 轮廓仿形探针尺 · 拒绝悬浮与薄板";
+      if (beat === 2) return "OFFICIAL [one-context] · 16孔龙门绘图仪 · 零件各司其职";
+      return "OFFICIAL [press-and-pull] · 53个实体 · 4倍放大依然耐看";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 形式即逻辑", en: "00s · Form is Logic" },
-        headline: { zh: "凸轮与滑块的物理制约，胜过一万字架构说明", en: "Physical cam and slider constraints outperform ten thousand words of docs" },
-        detail: { zh: "凸轮的凹槽强制滑块沿特定轨迹往复，正如软件协议的刚性状态机转移规则。", en: "Cam grooves force sliders along exact paths, just like rigid state transitions in software protocols." },
-        metrics: { zh: ["凸轮导槽物理约束", "刚性状态机转移", "零理解歧义"], en: ["Cam groove constraints", "Rigid state transitions", "Zero ambiguity"] },
-        stageCue: "CAM_SLIDER",
+        label: { zh: "00s · 灵魂铁律", en: "00s · The First Law" },
+        headline: { zh: "SKILL.md 置顶准则：物体就是解释", en: "Pinned at the very top of SKILL.md: The object is the explanation" },
+        detail: { zh: "舞台展示官方质量标杆 press-and-pull（弹簧按键测试台）：探针按压玻璃按键，千分表同步读出倾角。", en: "Stage runs official press-and-pull: a plunger presses a keycap while a dial indicator reads out tilt angle live." },
+        metrics: { zh: ["官方 press-and-pull 标杆", "禁止方块箭头与悬空标签", "运动即概念定义"], en: ["Official press-and-pull benchmark", "No boxes, arrows, or floating tags", "Motion defines the concept"] },
+        stageCue: "TEST_RIG_INTRO",
         scriptText: {
-          zh: "为什么我们常说‘物体就是解释’？因为在机械里，一个零件能往哪动、能转多快，完全写在它的形状和咬合点上。",
-          en: "Why do we say 'objects are the explanation'? In mechanics, where a part moves and how fast it turns is stamped into its physical shape."
+          zh: "这个技能的全部灵魂，写在SKILL.md的最顶上：物体就是解释。不许画方块，不许画箭头，不许让标签飘在空中。Claude必须发明一台真实的东西，它的运转方式等于概念本身，还要用一句话说清，什么在动，这个动代表什么。",
+          en: "The entire soul of this skill sits at the very top of SKILL.md: the object is the explanation. No boxes, no arrows, no floating labels. Claude must invent a real device whose operation equals the concept, stating in one sentence what moves and what that motion means."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 轮廓仿形", en: "10s · Profile Contouring" },
-        headline: { zh: "车刀切削出阶梯轴，公差与层级直观呈现", en: "Lathe tool turning stepped shafts makes hierarchies and tolerances tactile" },
-        detail: { zh: "不同直径的阶梯轴体现了数据分层的容量差异，切削切痕就是计算成本的具象化。", en: "Stepped shafts of varying diameters reflect tiered capacities; tooling cuts physicalize computational overhead." },
-        metrics: { zh: ["阶梯轴直径分层", "切削公差可视化", "工序推进反馈"], en: ["Stepped diameter tiers", "Machining tolerances", "Process feedback"] },
-        stageCue: "LATHE_TOOL",
+        label: { zh: "10s · 两种典型失败", en: "10s · Two Classic Failures" },
+        headline: { zh: "Ryan 总结的无数次失败，只有两种死法", en: "Across countless failed runs, Ryan found only two ways diagrams die" },
+        detail: { zh: "太抽象（悬浮板块）或太平淡（薄板画线）。舞台切入官方 profile（轮廓仿形尺）：几十根精密探针紧密贴合。", en: "Too abstract (floating slabs) or too flat (a bare plate with lines). Contrast that with the official profile contour gauge." },
+        metrics: { zh: ["官方 profile 轮廓仿形尺", "拒绝悬浮抽象板块", "拒绝无体积扁平薄板"], en: ["Official profile contour gauge", "Reject floating abstract slabs", "Reject flat featureless plates"] },
+        stageCue: "PROFILE_GAUGE",
         scriptText: {
-          zh: "你看这个车刀切削台阶轴的零件。粗的地方承受大扭矩，细的地方追求高转速。这不就是高并发架构里读写分离的写端和读端吗？",
-          en: "Observe this lathe turning a stepped shaft. The thick section carries high torque, while the thin section hits high speeds. That is CQRS in metal."
+          zh: "Ryan说他看过无数次失败。失败只有两种。一种太抽象，一堆悬浮板块，看不出是个啥。一种太平，一块大板子画几条线，没体积没细节。",
+          en: "Ryan says he watched countless failures, and they always fail in one of two ways: either too abstract — floating slabs that look like nothing — or too flat — a big board with a few lines and zero volume or detail."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 同轴约束", en: "20s · Coaxial Alignment" },
-        headline: { zh: "同轴主轴确保一致性，打破单点异构隐患", en: "Coaxial spindles enforce synchronization, eliminating single-point divergence" },
-        detail: { zh: "所有轮系穿在同一根淬火钢主轴上，只要主轴旋转，所有附属部件必须保持绝对角速度同步。", en: "Gears share a hardened steel spindle; as it rotates, all sub-assemblies preserve absolute angular synchronization." },
-        metrics: { zh: ["淬火同轴主轴", "强一致性物理锁定", "消除异构漂移"], en: ["Hardened coaxial spindle", "Strong mechanical lock", "Eliminates drift"] },
-        stageCue: "COAXIAL_SHAFT",
+        label: { zh: "20s · 唯一药方", en: "20s · The Only Cure" },
+        headline: { zh: "造一台叫得出名字的机器，每个小零件都有活干", en: "The cure: Build a named machine of small parts where each has a job" },
+        detail: { zh: "舞台切入官方 one-context（16孔龙门绘图仪）：一个共享 GPU 上下文变成单个打印头巡回访问 16 个墨水池。", en: "Stage switches to official one-context: a shared WebGL context rendered as one gantry head visiting 16 ink wells." },
+        metrics: { zh: ["官方 one-context 龙门绘图仪", "1 个打印头巡访 16 槽", "每个零件各司其职"], en: ["Official one-context gantry plotter", "1 printhead serving 16 wells", "Every part has a specific job"] },
+        stageCue: "GANTRY_PLOTTER",
         scriptText: {
-          zh: "把分布式锁画成一根贯穿所有齿轮的同轴主轴。主轴被销子卡住，所有齿轮一瞬间停摆，没有脑补空间，这就是物理确定性。",
-          en: "Render a distributed lock as a coaxial shaft through every gear. Pin the shaft, and every gear stops. No guessing; pure physical certainty."
+          zh: "药方也只有一个，造一台叫得出名字的机器，一堆小零件，每个零件都有活干。",
+          en: "And there is only one cure: build a recognizable machine made of many small parts, where every single part has a job to do."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 认知闭环", en: "30s · Cognitive Loop" },
-        headline: { zh: "让观看者从‘听讲座’转变为‘操作仪器’", en: "Transforms the audience from passive listeners into machine operators" },
-        detail: { zh: "通过键盘按键与拖拽滑块直接干预机械运转，观众在因果反馈中建立真正的系统级直觉。", en: "Through key presses and dragging sliders, viewers manipulate parts directly, building genuine intuition via immediate tactile feedback." },
-        metrics: { zh: ["按键实时触发交互", "微观宏观双向缩放", "建立系统级心智模型"], en: ["Keyboard interactive triggers", "Micro/macro bidirectional zoom", "Builds system mental models"] },
-        stageCue: "PRESS_RUN",
+        label: { zh: "30s · 四倍细节标准", en: "30s · 4x Zoom Standard" },
+        headline: { zh: "1× 看清整机，4× 放大处处皆有真实机械结构", en: "Clear at 1x overview, mechanically rich at 4x close-up inspection" },
+        detail: { zh: "回到 press-and-pull 放大视角：53 个实体、470 条路径，倒角、沉孔螺钉与弹簧在 4 倍镜下依然无懈可击。", en: "Zooming into press-and-pull: 53 solids and 470 paths — bevels, countersunk screws, and springs hold up under 4x magnification." },
+        metrics: { zh: ["53 实体 / 470 路径", "0.4–1.6 精密倒角", "1× 清晰 / 4× 耐看"], en: ["53 solids / 470 paths", "0.4–1.6 precision bevels", "Clear at 1x / rich at 4x"] },
+        stageCue: "TEST_RIG_ZOOM",
         scriptText: {
-          zh: "当读者可以用手指按键去扳动机床离合器的时候，他不再是被动的信息接收者，而是这台数字机器的试车工程师。",
-          en: "When users tap keys to engage a machine clutch, they stop being passive listeners and become test engineers driving a digital engine."
+          zh: "从整体到四倍放大，每一个倒角、螺钉、刻度都经得起审视。",
+          en: "From the full overview down to four-times zoom, every chamfer, screw head, and dial tick stands up to close inspection."
         }
       }
     ]
@@ -389,82 +389,82 @@ export const CHAPTERS: Chapter[] = [
     id: "ch05",
     index: 4,
     number: "05",
-    title: { zh: "提示词的三个关键词", en: "Three Keywords for Prompts" },
+    title: { zh: "提示词的三个关键词", en: "Three Keywords in the Prompt" },
     subtitle: { zh: "OFFICIAL FIGURES: LRU-CACHE · RATE-LIMITER · AFTERBURNER · SEASONS", en: "Official Figures: LRU Cache · Rate Limiter · Afterburner · Seasons" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "lru-cache",
     thesis: {
-      zh: "驾驭 Anatomy 只需掌握三个黄金词汇：隐喻 (Metaphor)、传动 (Drive)、剖面 (Cross-Section)。",
-      en: "Mastering Anatomy boils down to three golden words: Metaphor, Drive, and Cross-Section."
+      zh: "提示词里只写想法，别写画什么；把发明机器的工作交给 Claude。",
+      en: "State only the concept in your prompt, never what to draw — leave inventing the machine to Claude."
     },
     takeaway: {
-      zh: "Metaphor 锚定形态 · Drive 注入活力 · Section 剖视内部",
-      en: "Metaphor anchors form · Drive breathes life · Section reveals the interior"
+      zh: "interactive（能拖能按） · WebGL（流体火焰着色器） · 3D（真纵深重投影）",
+      en: "interactive (drag & press) · WebGL (shader plumes & fluids) · 3D (true depth re-projection)"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [lru-cache] · CONVEYOR REORDERING & HEAD EVICTION";
-        if (beat === 1) return "OFFICIAL [rate-limiter] · TOKEN ESCAPEMENT & SPILL OVERFLOW";
-        if (beat === 2) return "OFFICIAL [afterburner] · FUEL SPRAY RINGS & SUPERSONIC NOZZLE";
-        return "OFFICIAL [seasons] · ORBITAL TILT & SOLAR DIAL CYCLES";
+        if (beat === 0) return "OFFICIAL [lru-cache] · BOOKCASE EVICTION METAPHOR";
+        if (beat === 1) return "KEYWORD [interactive] · OFFICIAL [rate-limiter]";
+        if (beat === 2) return "KEYWORD [WebGL] · OFFICIAL [afterburner] SHADER PLUME";
+        return "KEYWORD [3D] · OFFICIAL [seasons] 26 PARTS IN TRUE 3D";
       }
-      if (beat === 0) return "OFFICIAL [lru-cache] · 履带重排与末端淘汰";
-      if (beat === 1) return "OFFICIAL [rate-limiter] · 令牌漏斗与溢出滑梯";
-      if (beat === 2) return "OFFICIAL [afterburner] · 环形喷油环与尾喷口膨胀";
-      return "OFFICIAL [seasons] · 轨道倾角与日晷周年循环";
+      if (beat === 0) return "OFFICIAL [lru-cache] · 自动退书架隐喻 · 只写想法不写画面";
+      if (beat === 1) return "关键词 [interactive] · OFFICIAL [rate-limiter] 令牌桶限流";
+      if (beat === 2) return "关键词 [WebGL] · OFFICIAL [afterburner] 着色器尾焰激波";
+      return "关键词 [3D] · OFFICIAL [seasons] 26个三维零件每帧重投影";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 隐喻 Metaphor", en: "00s · Metaphor" },
-        headline: { zh: "第一词：为抽象代码赋予坚固的实体机械隐喻", en: "Word 1: Metaphor — anchor code into tangible industrial machinery" },
-        detail: { zh: "不要写“生成 LRU 缓存图”，而要写“带循环履带与机械抓手的货架分拣机，热数据放顶层，冷数据落废料框”。", en: "Don't say 'draw an LRU cache.' Say 'a reordering conveyor with magnetic claws: hot items ride high, cold items drop into waste bins.'" },
-        metrics: { zh: ["实体机械映射", "摒弃抽象框图", "赋予工业现实感"], en: ["Physical machine mapping", "Abandons abstract diagrams", "Grants industrial realism"] },
-        stageCue: "LRU_CONVEYOR",
+        label: { zh: "00s · 反直觉铁律", en: "00s · Counter-Intuitive Rule" },
+        headline: { zh: "只写你要解释的想法：LRU 缓存自动变成书架", en: "Only write the idea: LRU cache eviction becomes a mechanical bookcase" },
+        detail: { zh: "舞台直接运行官方 lru-cache（自动退书架）：你只写“解释LRU缓存怎么淘汰条目”，Claude 自己发明了这台书架机。", en: "Stage runs official lru-cache: prompt 'explain how an LRU cache evicts entries', and Claude invents this bookcase." },
+        metrics: { zh: ["官方 lru-cache 书架机", "只给想法不写画面", "最久未用书籍自动滑落"], en: ["Official lru-cache bookcase", "Prompt the idea, not the object", "Least-used book drops down"] },
+        stageCue: "LRU_BOOKCASE",
         scriptText: {
-          zh: "想要让 Claude 做出惊艳的机器，提示词有三个关键词。第一个词是：Metaphor，隐喻。你得告诉它，这个概念在物理世界长什么样。",
-          en: "To get Claude to build jaw-dropping machines, remember three keywords. The first is Metaphor. You must define what this concept looks like as metal and stone."
+          zh: "用起来有个反直觉的地方。提示词里只写想法，别写画什么。你写解释LRU缓存怎么淘汰条目，就够了。决定把它画成书架这件事，是Claude的活。",
+          en: "Using it is counter-intuitive: only write the idea in your prompt, never what to draw. Just write 'explain how an LRU cache evicts entries.' Deciding to turn it into a bookcase is Claude's job."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 传动 Drive", en: "10s · Drive" },
-        headline: { zh: "第二词：明确动力源头与机械运动传递链条", en: "Word 2: Drive — trace the power source through mechanical link chains" },
-        detail: { zh: "必须写清驱动轴、皮带轮、齿轮减速箱与阻尼器，运动有始有终，各构件角速度严格符合比例。", en: "Explicitly detail drive shafts, pulleys, reduction gearboxes, and dampers so every motion has clear mechanical lineage." },
-        metrics: { zh: ["动力源物理传递", "齿轮减速比一致", "阻尼与反馈链路"], en: ["Power transmission line", "Consistent gear ratios", "Damping and feedback loop"] },
-        stageCue: "RL_ESCAPEMENT",
+        label: { zh: "10s · 关键词 1：interactive", en: "10s · Keyword 1: interactive" },
+        headline: { zh: "写下 interactive，死图瞬间变成可把玩的仪器", en: "Add 'interactive' so the figure can be dragged and pressed" },
+        detail: { zh: "舞台切入官方 rate-limiter（令牌桶限流器）：写上 interactive，即刻支持拖拽阀门、按键调速与实时流量读数。", en: "Stage switches to official rate-limiter: adding 'interactive' unlocks draggable valves, key controls, and live gauges." },
+        metrics: { zh: ["官方 rate-limiter 令牌桶", "interactive 激活拖拽按键", "不写则是静态图"], en: ["Official rate-limiter bucket", "'interactive' enables drag & keys", "Static diagram if omitted"] },
+        stageCue: "RATE_LIMITER",
         scriptText: {
-          zh: "第二个词是：Drive，传动。机器不能凭空动，必须有曲轴、飞轮、连杆或者擒纵机构。动力从哪来，传递给谁，全链条闭环。",
-          en: "The second word is Drive. Parts cannot float; they require crankshafts, flywheels, connecting rods, or escapements. Trace power from motor to output."
+          zh: "但这里有个很关键的地方，有三个词会改变结果，只有你写进去它才用。interactive，出来的图能拖能按，不写就是一张死图。",
+          en: "However, three special keywords change the output, and Claude only uses them if you ask. First: interactive — the result can be dragged and pressed; leave it out and you get a static image."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 剖面 Section", en: "20s · Cross-Section" },
-        headline: { zh: "第三词：切开外壳，显露核心运作腔体与流道", en: "Word 3: Cross-Section — slice the casing to reveal internal chambers" },
-        detail: { zh: "如同喷气发动机加力燃烧室的剖视图，剥开厚重金属机壳，让内部喷油嘴与点火电极清晰显露。", en: "Like an afterburner cutaway, slice away heavy outer cladding to expose internal fuel rings, igniters, and supersonic nozzles." },
-        metrics: { zh: ["四分之一透视剖切", "内部流场工况可见", "零件装配层级分明"], en: ["Quarter-cut perspective", "Visible internal fluid paths", "Clear subassembly tiers"] },
-        stageCue: "AB_NOZZLE",
+        label: { zh: "20s · 关键词 2：WebGL", en: "20s · Keyword 2: WebGL" },
+        headline: { zh: "写下 WebGL，火焰、水流、等离子体嵌进同一个等轴相机", en: "Add 'WebGL' to hand fire, water, and plasma to shaders in the same camera" },
+        detail: { zh: "舞台切入官方 afterburner（喷气加力燃烧室）：WebGL 着色器在前后两层 SVG 之间实时渲染激波钻戒与尾焰。", en: "Stage switches to official afterburner: a WebGL shader renders shock diamonds and exhaust plumes inside the isometric camera." },
+        metrics: { zh: ["官方 afterburner 加力燃烧室", "WebGL 着色器内嵌等轴相机", "火焰激波零突兀过渡"], en: ["Official afterburner plume", "WebGL shader in isometric camera", "Seamless flame & shockwaves"] },
+        stageCue: "AFTERBURNER_GL",
         scriptText: {
-          zh: "第三个词是：Cross-Section，剖切。不要画一个黑盒子或者封闭机箱，把外壳切开四分之一，露出里面的气道、活塞和轴承。",
-          en: "The third word is Cross-Section. Never draw a sealed black box. Slice away a quarter quadrant to reveal internal conduits, pistons, and bearings."
+          zh: "WebGL，火焰、水流、等离子体交给着色器，嵌在同一个等轴相机里画。",
+          en: "Second: WebGL — flames, water flow, and plasma are handed off to fragment shaders, rendered inside the exact same isometric camera."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 组合魔法", en: "30s · Formula in Action" },
-        headline: { zh: "三词合璧，Claude 即可秒级构筑复杂工业奇观", en: "Combine all three, and Claude generates complex industrial wonders in seconds" },
-        detail: { zh: "只要提示词包含这三要素，哪怕是复杂的公钥加密或季节变化，都能一次性蜕变为兼具科学与艺术的杰作。", en: "When prompts cover metaphor, drive, and section, even public-key cryptography or orbital mechanics turn into functional masterpieces." },
-        metrics: { zh: ["三位一体构筑规范", "Prompt 工程标准化", "一次通过率达 95%"], en: ["Triad architectural spec", "Standardized prompt engineering", "95% first-pass success rate"] },
-        stageCue: "SEASONS_ORBIT",
+        label: { zh: "30s · 关键词 3：3D", en: "30s · Keyword 3: 3D" },
+        headline: { zh: "写下 3D，零件真正在纵深里转，每帧重新投影排序", en: "Add '3D' so parts truly rotate in depth, re-projecting and sorting every frame" },
+        detail: { zh: "舞台切入官方 seasons（四季 3D 地球仪）：26 个三维零件在纵深中真实公转自转，每帧重算四级明暗与太阳光照。", en: "Stage switches to official seasons: 26 parts revolve in true 3D depth, re-projecting and sorting every single frame." },
+        metrics: { zh: ["官方 seasons 四季 3D 地球", "26 零件每帧真 3D 重投影", "耗时按小时计的重武器"], en: ["Official seasons 3D tellurion", "26 parts re-projected per frame", "Measured in hours, not minutes"] },
+        stageCue: "SEASONS_3D",
         scriptText: {
-          zh: "只要你在提示词里写好隐喻、传动和剖面，Claude 就能在不需要任何人工干预的情况下，一次性吐出令人叹为观止的高精度工业级模型。",
-          en: "Whenever your prompt specifies Metaphor, Drive, and Section, Claude outputs stunning high-precision industrial models without human hand-holding."
+          zh: "3D，零件真正在纵深里转，每帧重新投影排序。这个最贵，按小时算，分钟就别想了。",
+          en: "Third: 3D — parts genuinely rotate in depth, re-projected and depth-sorted every frame. This one is the most expensive: count on hours, forget about minutes."
         }
       }
     ]
@@ -479,76 +479,76 @@ export const CHAPTERS: Chapter[] = [
     stageType: "official-pkg",
     machineKey: "one-stage",
     thesis: {
-      zh: "Anatomy 将机器生成细分为严谨的十步工序，绝不让 AI 产生模糊幻觉。",
-      en: "Anatomy deconstructs machine synthesis into a strict 10-step pipeline, eliminating AI hallucination."
+      zh: "质量大头在前 4 步就定了 —— 那时候屏幕上连一个像素都还没有。",
+      en: "Most of the quality is decided in the first four steps — before a single pixel is drawn on screen."
     },
     takeaway: {
-      zh: "从概念解构到光照渲染 · 十步流水线铸就工业级确定性",
-      en: "From deconstruction to shader rendering · 10-step pipeline guarantees industrial certainty"
+      zh: "先想清楚造什么，再动手画：在任何 AI 工程协作里都成立",
+      en: "Figure out what to build before drawing a pixel — a universal law for AI collaboration"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [one-stage] · PIPELINE STAGE 1..3 · BOUNDING CUBE";
-        if (beat === 1) return "OFFICIAL [fit] · PIPELINE STAGE 4..6 · GEOMETRIC TOLERANCE FIT";
-        if (beat === 2) return "OFFICIAL [separable-blur] · PIPELINE STAGE 7..8 · DUAL-PASS GAUSSIAN";
-        return "OFFICIAL [lens-bench] · PIPELINE STAGE 9..10 · OPTICAL FOCUS FINAL INSPECTION";
+        if (beat === 0) return "STEPS 01-02 · OFFICIAL [one-stage] · TIER & BUDGET";
+        if (beat === 1) return "STEPS 03-04 · OFFICIAL [fit] · ZERO-PIXEL PHASE DECIDES 80%";
+        if (beat === 2) return "STEPS 05-09 · OFFICIAL [separable-blur] · GEOMETRY & PAINTER";
+        return "STEP 10 · OFFICIAL [lens-bench] · CRITIC VERIFICATION";
       }
-      if (beat === 0) return "OFFICIAL [one-stage] · 流水线步骤 1..3 · 包围盒与空间基准";
-      if (beat === 1) return "OFFICIAL [fit] · 流水线步骤 4..6 · 几何公差与部件配合";
-      if (beat === 2) return "OFFICIAL [separable-blur] · 流水线步骤 7..8 · 双通道高斯模糊";
-      return "OFFICIAL [lens-bench] · 流水线步骤 9..10 · 光学透镜最终检验台";
+      if (beat === 0) return "步骤 01-02 · OFFICIAL [one-stage] · 定尺寸报预算 (Figure / Hero / Epic)";
+      if (beat === 1) return "步骤 03-04 · OFFICIAL [fit] · 零像素阶段决定大头质量";
+      if (beat === 2) return "步骤 05-09 · OFFICIAL [separable-blur] · 静态几何与画家算法上色";
+      return "步骤 10 · OFFICIAL [lens-bench] · 像批评家一样光学验收";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 空间定界", en: "00s · Bounding Bounds" },
-        headline: { zh: "步骤 1~3：建立 3D 轴测网格与包围盒基准", en: "Steps 1–3: Establish 3D isometric grid and bounding cube bounds" },
-        detail: { zh: "从三维坐标系投影公式出发，规划设备长宽高的安全包围盒，防止机件穿模出界。", en: "Derives projection matrices, establishing a tight safety bounding cube in 3D coordinate space to prevent clipping." },
-        metrics: { zh: ["3D 等轴测投影矩阵", "安全包围盒锁定", "零零件穿模风险"], en: ["3D isometric projection matrix", "Bounding cube lock", "Zero boundary clipping"] },
-        stageCue: "STAGE_BOUND",
+        label: { zh: "00s · 定级报预算", en: "00s · Size & Budget" },
+        headline: { zh: "第 1 步先报零件规模与耗时，绝不擅自开工", en: "Step 1 quotes part count and time budget — never starts Epic unasked" },
+        detail: { zh: "舞台运行官方 one-stage：Figure 40–80 零件（半小时+），Hero 80–150 零件（2–4小时），Epic 6小时起步必须先确认。", en: "Figure: 40–80 parts (~30m+), Hero: 80–150 parts (2–4h), Epic: 6h+ and never starts without asking you first." },
+        metrics: { zh: ["官方 one-stage 舞台机构", "Figure / Hero / Epic 三档", "不问用户绝不擅自开 Epic"], en: ["Official one-stage rig", "Figure / Hero / Epic tiers", "Never starts Epic without asking"] },
+        stageCue: "PIPELINE_1",
         scriptText: {
-          zh: "很多人好奇，AI 怎么可能把这么复杂的机器画得严丝合缝？秘密就是 Anatomy 内置的十步流水线。前三步，先定空间基准和包围盒。",
-          en: "Many wonder how AI produces complex assemblies without misalignments. The secret is Anatomy's 10-step pipeline. Steps 1 through 3 define spatial bounds."
+          zh: "从你敲回车到图做完，Claude走一条固定流水线，一共十步。定尺寸，先报预算，Figure四十到八十个零件，半小时出头，Hero八十到一百五十个零件，两到四小时，Epic六小时起步，而且不问你绝不擅自开工。",
+          en: "From hitting Enter to a finished piece, Claude follows a fixed ten-step pipeline. Step one sets the scale and budget: Figure is 40 to 80 parts in half an hour, Hero is 80 to 150 parts in two to four hours, and Epic starts at six hours — never starting without asking."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 零件公差", en: "10s · Geometric Fit" },
-        headline: { zh: "步骤 4~6：机加工零件配合与传动咬合解算", en: "Steps 4–6: Resolve component fits and mechanical mesh clearances" },
-        detail: { zh: "计算齿轮模数、节圆直径、轴承间隙与连杆行程，确保每一个零件在数学上具备真实运动可行性。", en: "Computes gear modules, pitch diameters, bearing clearances, and rod strokes, ensuring mathematical kinematics." },
-        metrics: { zh: ["齿轮模数与节圆匹配", "精密滑动间隙解算", "刚体运动学校验"], en: ["Gear module & pitch fit", "Precision slip tolerance", "Rigid body kinematics"] },
-        stageCue: "FIT_CLEARANCE",
+        label: { zh: "10s · 前四步定乾坤", en: "10s · First Four Steps" },
+        headline: { zh: "收集真数字 → 发明机器 → 列零件清单（零像素阶段）", en: "Gather real numbers → Invent machine → List parts (Zero pixels on screen)" },
+        detail: { zh: "舞台切入官方 fit（正交相机适配仪）：前四步屏幕上还没有一个像素，但数学模型与 40+ 零件清单已决定 80% 质量。", en: "Stage switches to official fit: quality is largely locked in during the first four steps before a single pixel exists." },
+        metrics: { zh: ["官方 fit 相机适配仪", "前 4 步零像素定成败", "纯数学模型驱动"], en: ["Official fit camera rig", "First 4 steps decide quality", "Zero pixels on screen yet"] },
+        stageCue: "PIPELINE_2",
         scriptText: {
-          zh: "四到六步是零件配合。齿轮的模数是多少、齿数对不对、滑动槽的间隙留几毫米，全部通过严格的三角函数计算。",
-          en: "Steps 4 through 6 calculate mechanical tolerances. Gear tooth pitch, clearance gaps, and slide strokes are solved with exact trigonometry."
+          zh: "收集真实数字，写成一个小模型。发明机器。列零件清单。关键来了，质量大头在前四步就定了，那时候屏幕上一个像素都还没有。",
+          en: "Collect real numbers into a small model. Invent the machine. List every part. Here is the key: most of the quality is decided in the first four steps, when not a single pixel is on screen yet."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 光影渲染", en: "20s · Lighting Passes" },
-        headline: { zh: "步骤 7~8：法线朝向光照计算与双通道阴影投射", en: "Steps 7–8: Normal vector lighting calculations and dual-pass shadows" },
-        detail: { zh: "依据三个轴向的面法向量分配顶光、侧光与环境底光，辅以高斯柔化投射阴影，烘托沉重体量感。", en: "Assigns directional key, rim, and ambient bounce lights based on face normals, rendered with Gaussian drop shadows." },
-        metrics: { zh: ["三向法向量光照分层", "柔和接触环境遮挡", "工业铸铁漫反射模型"], en: ["3-way face normal shading", "Soft contact ambient occlusion", "Cast iron matte diffuse model"] },
-        stageCue: "BLUR_PASS",
+        label: { zh: "20s · 几何与画家上色", en: "20s · Geometry & Painter's Order" },
+        headline: { zh: "规划相机 → 预计算静态几何 → 从后往前上色 → 装卡激活", en: "Plan camera → Compute static geometry → Paint back-to-front → Animate" },
+        detail: { zh: "舞台切入官方 separable-blur（49×49 钉板与双轨精密梳）：一次性预计算全部静态几何，按画家算法从后往前绘制。", en: "Stage switches to official separable-blur: pre-calculate all static geometry at once, paint back-to-front, mount, and animate." },
+        metrics: { zh: ["官方 separable-blur 精密梳", "静态几何一次性预计算", "画家算法深度排序"], en: ["Official separable-blur comb", "One-shot static geometry", "Painter's back-to-front order"] },
+        stageCue: "PIPELINE_3",
         scriptText: {
-          zh: "七到八步是光影渲染。朝上的面吃顶光，朝侧面的面吃侧光，背光面留深灰，再叠加上柔和的接触阴影，金属质感瞬间立住。",
-          en: "Steps 7 and 8 calculate illumination. Top-facing facets catch ceiling highlights, side faces take rim tints, grounded by soft drop shadows."
+          zh: "规划坐标系和相机。一次性算好全部静态几何。从后往前上色。装进卡片。让它动起来。",
+          en: "Plan the coordinate system and camera. Compute all static geometry in one go. Shade from back to front. Mount it in a card, and bring it to life."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 交互挂载", en: "30s · Interaction Hooks" },
-        headline: { zh: "步骤 9~10：数据驱动属性注入与键盘交互绑定", en: "Steps 9–10: Inject data-anim attributes and keyboard listeners" },
-        detail: { zh: "为各运动组件挂载 data-anim 标签，暴露速度调节与拆解按键事件，使静态绘图一秒化身可操控交互装置。", en: "Appends data-anim hooks and keyboard listeners, turning static vector art into a fully interactive digital machine." },
-        metrics: { zh: ["data-anim 状态驱动", "全局热键监听注入", "无缝衔接业务状态机"], en: ["data-anim state hooks", "Global shortcut injection", "Seamless state machine hookup"] },
-        stageCue: "LENS_INSPECT",
+        label: { zh: "30s · 批评家终检", en: "30s · Critic Inspection" },
+        headline: { zh: "第 10 步：像最严苛的批评家一样光学放大验收", en: "Step 10: Inspect like a ruthless critic — think first, draw second" },
+        detail: { zh: "舞台切入官方 lens-bench（光学透镜检验台）：先想清楚造什么，再动手画，最后用自动化检验收尾。", en: "Stage switches to official lens-bench: figure out what to build before drawing — a rule that holds across all AI collaboration." },
+        metrics: { zh: ["官方 lens-bench 光学检验台", "几何审计 + 断线归零", "先想清楚，再动手画"], en: ["Official lens-bench optical rig", "Critic audit verification", "Think clearly before drawing"] },
+        stageCue: "PIPELINE_4",
         scriptText: {
-          zh: "最后两步挂载交互属性。按下按键时哪根轴转、哪块夹板升起，全通过标准的 data 属性暴露出来，业务代码一行就能接管。",
-          en: "The final two steps inject data-anim attributes and keyboard listeners. Every gear, shaft, and slider becomes directly programmable."
+          zh: "第十步，像批评家一样验收。先想清楚造什么，再动手画。这个顺序放在任何AI协作里都成立。",
+          en: "Step ten: inspect the work like a critic. Figure out what you are building first, then start drawing. That sequence holds true for any AI collaboration."
         }
       }
     ]
@@ -563,76 +563,84 @@ export const CHAPTERS: Chapter[] = [
     stageType: "official-pkg",
     machineKey: "hash-map",
     thesis: {
-      zh: "哈希表是分拣格子，布隆过滤器是多孔筛网，互斥锁是铁栓销子 —— 一切算法皆有形。",
-      en: "Hash maps are sorting pigeonholes, Bloom filters are multi-mesh sieves, mutexes are hardened locking pins — all code has physical form."
+      zh: "把看不见的软件概念，翻译成官网图集里最惊艳的 5 台原版物理机器。",
+      en: "Translating invisible software algorithms into the five most iconic physical machines in the gallery."
     },
     takeaway: {
-      zh: "五大经典算法全实物化 · 算法学习从此告别死记硬背",
-      en: "Five classic algorithms physically realized · Farewell to rote memorization"
+      zh: "分拣台 · 老虎机 · 联锁水箱 · 索道邮车 · 轮盘赌 —— 哪个隐喻最妙？",
+      en: "Sorting desk · Fruit machine · Interlock tank · Mail ropeway · Roulette wheel — which metaphor wins?"
     },
-    readout: (_t, beat, lang = "zh") => {
+    readout: (t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [hash-map] · HASH BUCKET PIGEONHOLE SORTER";
-        if (beat === 1) return "OFFICIAL [bloom-filter] · MULTI-LAYER PROBABILISTIC MESH";
-        if (beat === 2) return "OFFICIAL [mutex] · LOCKING PIN PIN-TUMBLER ARREST";
-        return "OFFICIAL [tcp-handshake] · SYN-ACK TRIPARTITE INTERLOCK";
+        if (beat === 0) {
+          return t < 5.5
+            ? "OFFICIAL [hash-map] · POST-OFFICE SORTING DESK (MOD 8)"
+            : "OFFICIAL [bloom-filter] · 3-REEL FRUIT MACHINE & 16 FLAGS";
+        }
+        if (beat === 1) return "OFFICIAL [mutex] · DUAL-PUMP WATER TANK & INTERLOCK KEY";
+        if (beat === 2) return "OFFICIAL [tcp-handshake] · AERIAL MAIL ROPEWAY (SYN / ACK)";
+        return "OFFICIAL [sampling] · 16-POCKET TEMPERATURE ROULETTE WHEEL";
       }
-      if (beat === 0) return "OFFICIAL [hash-map] · 哈希桶分拣料槽与链表抽屉";
-      if (beat === 1) return "OFFICIAL [bloom-filter] · 多层概率微孔筛网";
-      if (beat === 2) return "OFFICIAL [mutex] · 淬火闭锁插销与防并发掣动";
-      return "OFFICIAL [tcp-handshake] · 三次握手安全联锁连杆";
+      if (beat === 0) {
+        return t < 5.5
+          ? "OFFICIAL [hash-map] · 邮局分拣台 (MOD 8 鸽子笼)"
+          : "OFFICIAL [bloom-filter] · 三滚筒水果老虎机与标志旗";
+      }
+      if (beat === 1) return "OFFICIAL [mutex] · 双水泵储水箱与唯一联锁钥匙";
+      if (beat === 2) return "OFFICIAL [tcp-handshake] · 两站架空索道邮车 (SYN / ACK)";
+      return "OFFICIAL [sampling] · 16格扇区温度采样轮盘赌";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 哈希分拣", en: "00s · Hash Map Bucket" },
-        headline: { zh: "哈希桶化为并排料槽，哈希冲突化身拉链抽屉", en: "Hash buckets become sorting hoppers; collisions expand into pull-out drawers" },
-        detail: { zh: "哈希值如同滑槽分拣器，将数据球精准投掷到对应储物格；一旦冲突，格子底部弹出垂直拉链链表。", en: "Hash codes act like mechanical diverters, routing data balls into slots; collisions expand downwards as chained drawers." },
-        metrics: { zh: ["分拣滑槽准确定位", "O(1) 机械寻址", "拉链法抽屉展开"], en: ["Diverter sorting guide", "O(1) mechanical retrieval", "Collision drawer unfolding"] },
-        stageCue: "HASH_BUCKET",
+        label: { zh: "00s · 哈希分拣台 & 布隆水果机", en: "00s · Sorting Desk & Fruit Machine" },
+        headline: { zh: "哈希冲突变邮局分拣台，布隆过滤器变三滚筒水果老虎机", en: "Hash collisions become a sorting desk; Bloom filter becomes a fruit slot machine" },
+        detail: { zh: "前半拍运行官方 hash-map（编码机打印 mod 8 投入鸽子笼）；后半拍自动切入官方 bloom-filter（三滚筒水果老虎机）。", en: "First half runs official hash-map (mod 8 pigeonholes); second half switches to official bloom-filter (3-reel fruit machine)." },
+        metrics: { zh: ["官方 hash-map 邮局分拣台", "官方 bloom-filter 水果机", "三标志位全立才中奖"], en: ["Official hash-map sorting desk", "Official bloom-filter slot machine", "All 3 flags up to hit jackpot"] },
+        stageCue: "META_HASH_BLOOM",
         scriptText: {
-          zh: "哈希表怎么画？在 Anatomy 看来，它就是一排整齐的精密物料槽。哈希函数是分拣导轨，把进来的零件按槽位分流，遇到冲突就向下接出拉链式储物斗。",
-          en: "How do you render a hash map? In Anatomy, it is an array of precision parts bins. Hash functions act as diverter tracks, dropping items into buckets."
+          zh: "来看几个我最喜欢的映射。哈希表冲突，变成邮局分拣台，编码机给每封信打印哈希值，名字对八取模，投进对应的鸽子笼。布隆过滤器，变成水果老虎机，三个滚筒就是三个哈希函数，一个字的三个标志位全立着才中奖。",
+          en: "Here are a few of my favorite mappings. Hash map collisions become a post-office sorting desk: an encoder stamps each letter with a hash and drops it into one of eight modulo pigeonholes. A Bloom filter becomes a three-reel fruit machine: three reels act as three hash functions, and you only hit the jackpot when all three flags stand up."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 布隆筛网", en: "10s · Bloom Filter Sieve" },
-        headline: { zh: "三重偏斜筛网：误判可能存在，绝对没有漏判", en: "Triple angled sieves: False positives possible, false negatives impossible" },
-        detail: { zh: "多重哈希函数化为三个不同角度的精密滤孔，只有全部透过的才可能命中，堵在网上的绝对未被记录。", en: "Multiple hash functions turn into three angled laser meshes. Anything blocked is definitely absent; what passes might be present." },
-        metrics: { zh: ["三重对角滤波孔径", "零假阴性物理保证", "位图微型挡板翻转"], en: ["Triple angled apertures", "Zero false-negative guarantee", "Bitmap shutter toggles"] },
-        stageCue: "BLOOM_SIEVE",
+        label: { zh: "10s · 互斥锁联锁水箱", en: "10s · Mutex Interlock Tank" },
+        headline: { zh: "互斥锁变成双水泵水箱与唯一一把物理联锁钥匙", en: "A mutex becomes a water tank with two pumps and a single interlock key" },
+        detail: { zh: "切入官方 mutex（水箱与联锁钥匙）：两个控制器同时读水位必溢出，只有持有钥匙的一方能读表开机。", en: "Stage runs official mutex: if both pumps read the gauge at once it overflows; only the one holding the key can run." },
+        metrics: { zh: ["官方 mutex 联锁水箱", "双泵并发读表 = 溢出", "唯一钥匙保障互斥访问"], en: ["Official mutex water tank", "Simultaneous read = overflow", "Single key enforces lock"] },
+        stageCue: "META_MUTEX",
         scriptText: {
-          zh: "布隆过滤器更绝，直接做成了三道交错的金属筛网。滚珠只要被任何一张网挡住，百分之百不存在；掉到底部的，大概率存在。",
-          en: "Bloom filters become three cascading metal sieves. If a marble is stopped by any sieve, it is 100% absent. If it drops through, it likely exists."
+          zh: "互斥锁，变成一台水箱加一把联锁钥匙，两个水泵同时读水位就会溢出，只有拿着钥匙的那个能读表开机。",
+          en: "A mutex becomes a water tank with a single interlock key: if both pumps read the water level at once it overflows, so only the pump holding the key can read the gauge and run."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 互斥闭锁", en: "20s · Mutex Deadbolt" },
-        headline: { zh: "气动锁舌重重落下，临界区独占一目了然", en: "Pneumatic deadbolt slams down: Critical section exclusivity is obvious" },
-        detail: { zh: "线程竞争化为两条冲向同一加工工位的滑轨，第一辆车就位瞬间气动锁销插死通道，后车必须原地等待排空。", en: "Thread contention is two carriages racing for one workstation. The first car trips a pneumatic bolt, locking out competitors." },
-        metrics: { zh: ["高强度气动锁插销", "毫秒级临界区独占", "等待队列物理阻挡"], en: ["High-strength pneumatic bolt", "Millisecond exclusive lock", "Physical wait queue stop"] },
-        stageCue: "MUTEX_BOLT",
+        label: { zh: "20s · TCP 索道邮车", en: "20s · TCP Aerial Ropeway" },
+        headline: { zh: "TCP 三次握手变成两站之间的往返架空索道邮车", en: "TCP three-way handshake becomes an aerial mail ropeway between two stations" },
+        detail: { zh: "切入官方 tcp-handshake（索道邮车）：SYN、SYN+ACK、ACK 三个邮罐挂在钢索上来回飞渡并扳动信号旗。", en: "Stage runs official tcp-handshake: SYN, SYN+ACK, and ACK canisters shuttle back and forth along the cableway." },
+        metrics: { zh: ["官方 tcp-handshake 索道邮车", "SYN / SYN+ACK / ACK 邮罐", "双站信号旗状态同步"], en: ["Official tcp-handshake ropeway", "SYN / SYN+ACK / ACK canisters", "Two-station lever sync"] },
+        stageCue: "META_TCP",
         scriptText: {
-          zh: "互斥锁就是机床上的气动锁销。一个工件滑进工位，咔嗒一声，钢销插死，第二辆车被硬生生卡在阻挡器前面，直到第一个工件加工完毕释放锁销。",
-          en: "A mutex is a pneumatic deadbolt. When a workpiece rolls in, a steel bolt snaps shut, holding the second workpiece at bay until released."
+          zh: "TCP三次握手，变成两站之间的索道邮车，SYN、SYN加ACK、ACK三个罐子来回飞。",
+          en: "TCP's three-way handshake becomes an aerial mail ropeway between two stations, with SYN, SYN-ACK, and ACK canisters flying back and forth."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 三次握手", en: "30s · Three-Way Handshake" },
-        headline: { zh: "SYN、ACK 转化为三道机械联锁棘爪啮合", en: "SYN and ACK turn into three interlocking mechanical security pawls" },
-        detail: { zh: "客户端与服务端化为两台相邻的联锁装置，三个按键依序推下连杆，三重保险销依次落锁，通道建立。", en: "Client and server act as two interlocked consoles: three linkages push forward, engaging safety pawls sequentially to seal the circuit." },
-        metrics: { zh: ["双向通信通道互验", "三级联动机械安全销", "全双工信道接通"], en: ["Bidirectional channel verification", "3-stage safety pin linkage", "Full-duplex channel engaged"] },
-        stageCue: "TCP_HANDSHAKE",
+        label: { zh: "30s · 温度采样轮盘赌", en: "30s · Temperature Roulette" },
+        headline: { zh: "温度采样变成 16 格扇区宽度随概率变化的轮盘赌", en: "Temperature sampling becomes a 16-pocket roulette wheel with variable widths" },
+        detail: { zh: "切入官方 sampling（温度采样轮盘赌）：16 个格子对应候选词，转动温控旋钮即可实时改变扇区宽度分布。", en: "Stage runs official sampling: 16 pockets represent candidate tokens, and pocket width directly reflects probability." },
+        metrics: { zh: ["官方 sampling 温度轮盘赌", "16 格宽度 = Token 概率", "温控旋钮实时重塑分布"], en: ["Official sampling roulette wheel", "16 pocket widths = probabilities", "Temperature dial reshapes odds"] },
+        stageCue: "META_ROULETTE",
         scriptText: {
-          zh: "还有 TCP 三次握手，成了两台操作台之间的三道机械连杆。推过去一根、回传一根、再锁死一根，全双工数据信道当场贯通。",
-          en: "TCP's 3-way handshake becomes three mechanical linkages between control consoles: send, ack, verify, locking the circuit open."
+          zh: "温度采样，变成轮盘赌，十六个格子是候选词，格子宽度就是概率。哪个映射最妙，公屏见。",
+          en: "Temperature sampling becomes a roulette wheel: sixteen pockets for candidate words, where pocket width equals probability. Which mapping is cleverest? Tell me in the comments."
         }
       }
     ]
@@ -642,81 +650,81 @@ export const CHAPTERS: Chapter[] = [
     index: 7,
     number: "08",
     title: { zh: "两台大机器", en: "Two Heavyweight Machines" },
-    subtitle: { zh: "OFFICIAL FIGURES: TURBOFAN · REACTOR · AFTERBURNER", en: "Official Figures: Turbofan · Nuclear Reactor · Afterburner" },
+    subtitle: { zh: "OFFICIAL FIGURES: TRENT 970 TURBOFAN & SPACEX RAPTOR 2", en: "Official Figures: Rolls-Royce Trent 970 & SpaceX Raptor 2" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "turbofan",
     thesis: {
-      zh: "不仅能做微观算法，Anatomy 同样能驾驭双转子涡扇引擎与核反应堆这种顶级工业重器。",
-      en: "Beyond microscopic algorithms, Anatomy masters apex industrial giants like twin-spool turbofans and nuclear reactors."
+      zh: "小点子造小机器，大点子才见真功夫：官方遄达 970 与猛禽 2 号同台飙戏。",
+      en: "Small ideas make small machines; big ideas show real mastery: Trent 970 and Raptor 2 take the stage."
     },
     takeaway: {
-      zh: "双转子涡扇与核反应堆 · 工业级复杂度极限施压验证",
-      en: "Turbofan and nuclear reactor · Stress-testing complexity at industrial scales"
+      zh: "能跑的第一版 38 分钟就出来了 —— 改到挑不出毛病，又花了 10 个小时",
+      en: "The first working prototype took 38 minutes — polishing it to zero defects took another 10 hours"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [turbofan] · TWIN-SPOOL JET ENGINE · 300 KN THRUST";
-        if (beat === 1) return "OFFICIAL [reactor] · PRESSURIZED WATER REACTOR";
-        if (beat === 2) return "OFFICIAL [afterburner] · MACH 2 SUPERSONIC REHEAT · 300 KN THRUST";
-        return "HEAVY MACHINES · ZERO DIAGRAM ABSTRACTION";
+        if (beat === 0) return "OFFICIAL [turbofan] · ROLLS-ROYCE TRENT 970 · 1.2 t/s AIR · 14 -> 334 kN";
+        if (beat === 1) return "OFFICIAL [raptor-engine] · HOVER EXPLODED INTO 11 ASSEMBLIES";
+        if (beat === 2) return "OFFICIAL [raptor-engine] · KEY [I] IGNITION · Pc 300 BAR · WEBGL PLUME";
+        return "FIRST PROTOTYPE: 38 MIN · ZERO-DEFECT AUDIT: +10 HOURS";
       }
-      if (beat === 0) return "OFFICIAL [turbofan] · 双转子涡扇喷气引擎 · 300 kN 推力";
-      if (beat === 1) return "OFFICIAL [reactor] · 压水堆压力容器与控制棒组";
-      if (beat === 2) return "OFFICIAL [afterburner] · 2马赫超音速加力燃烧室 · 300 kN 推力";
-      return "重型机械 · 拒绝示意图抽象";
+      if (beat === 0) return "OFFICIAL [turbofan] · A380 遄达970 · 1.2吨/秒吞气 · 14 → 334 kN";
+      if (beat === 1) return "OFFICIAL [raptor-engine] · 猛禽2号 · 悬停拆解为 11 个组件";
+      if (beat === 2) return "OFFICIAL [raptor-engine] · 按 I 键点火 · Pc 300 BAR 主燃烧室";
+      return "首版成型: 38 分钟 · 挑不出毛病: +10 小时";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 航空涡扇", en: "00s · Turbofan Engine" },
-        headline: { zh: "高低压双轴嵌套逆转，300kN 推力真实喷涌", en: "Concentric high/low pressure shafts counter-rotate, delivering 300kN thrust" },
-        detail: { zh: "大涵道比前风扇低速运转，高压压气机与燃烧室高速尖啸，双同心轴以不同转速驱动，推力喷管动态收放。", en: "High-bypass front fan spins at low rpm while high-pressure core screams at high rpm on concentric dual shafts." },
-        metrics: { zh: ["高低压双转子同心轴", "大涵道比气流分流", "300 kN 额定推力输出"], en: ["High/low pressure concentric shafts", "High-bypass air split", "300 kN rated thrust output"] },
-        stageCue: "TURBOFAN_CORE",
+        label: { zh: "00s · 遄达970涡扇真机", en: "00s · Trent 970 Turbofan" },
+        headline: { zh: "A380 遄达 970 挂上试车台，四分之一剖开见真章", en: "A380's Trent 970 on the test stand, quarter-sectioned to expose three spools" },
+        detail: { zh: "舞台直接运行官方 turbofan（遄达970）：风扇、中压、高压三个转子按各自速度旋转，吞气 1.2 吨/秒，推力从 14 爬升至 334 kN。", en: "Drag the throttle: fan, IP, and HP spools spin at distinct speeds, swallowing 1.2 tons of air/sec from 14 to 334 kN thrust." },
+        metrics: { zh: ["官方 turbofan 遄达970", "三转子差速同轴旋转", "推力 14 kN → 334 kN"], en: ["Official Trent 970 turbofan", "3-spool differential speeds", "1.2 t/s air · 14 to 334 kN"] },
+        stageCue: "TRENT_GROUND_RUN",
         scriptText: {
-          zh: "如果你觉得画算法只是小打小闹，来看看这两台大机器。第一台：航空涡扇喷气发动机。这是现代工程学的皇冠。",
-          en: "If you think algorithms are small toys, look at these heavy giants. First: an aerospace turbofan engine — the crown jewel of engineering."
+          zh: "小点子造小机器，大点子才见真功夫。遄达970，A380的发动机，挂在试车台上，四分之一剖开。拖油门杆，风扇、中压、高压三个转子按各自的速度转起来。每秒吞进去1.2吨空气，推力从14千牛爬到334千牛。",
+          en: "Small ideas build small machines; big ideas show real mastery. The Trent 970, the A380's engine, hangs on a test stand sliced open by a quarter. Drag the throttle lever and the fan, intermediate, and high-pressure spools spin up at their own speeds, swallowing 1.2 tons of air per second as thrust climbs from 14 to 334 kilonewtons."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 反应堆芯", en: "10s · Reactor Core" },
-        headline: { zh: "压水堆控制棒升降，核燃料棒切口工况全显", en: "PWR control rods elevate, revealing fuel assembly cutaway thermodynamics" },
-        detail: { zh: "重型压力容器侧向剖切，银白色锆合金包壳与十字形控制棒束平稳升降，主冷却剂循环泵低频运转。", en: "Heavy pressure vessel cutaway exposes zirconium alloy fuel claddings, cruciform control rods, and coolant loops." },
-        metrics: { zh: ["锆合金燃料组件", "银铟镉控制棒升降", "压水堆一回路稳压"], en: ["Zircaloy fuel assemblies", "Control rod drive mechanism", "Primary coolant loop balance"] },
-        stageCue: "REACTOR_RODS",
+        label: { zh: "10s · 猛禽11组件拆解", en: "10s · Raptor 2 Exploded View" },
+        headline: { zh: "SpaceX 猛禽 2 号：悬停鼠标，整机分成 11 个组件散开", en: "SpaceX Raptor 2: Hover the mouse to split the engine into 11 assemblies" },
+        detail: { zh: "舞台切入官方 raptor-engine：11 个总成沿弹簧导轨平滑解体展开，高密度管路经审计证明零穿插。", en: "Stage switches to official raptor-engine: 11 major subassemblies glide apart on spring physics, ready for inspection." },
+        metrics: { zh: ["官方 raptor-engine 猛禽2", "悬停触发 11 组件拆解", "全流量分级燃烧管路"], en: ["Official SpaceX Raptor 2", "Hover splits 11 assemblies", "Press [I] to ignite"] },
+        stageCue: "RAPTOR_EXPLODE",
         scriptText: {
-          zh: "第二台是压水堆核反应堆。整台机器切掉四分之一，露出堆芯里的燃料棒和十字控制棒。你可以通过按键调节控制棒的插入深度。",
-          en: "Second: a pressurized water reactor. Sliced by a quarter quadrant, exposing fuel assemblies and control rods you can adjust via keys."
+          zh: "另一台更狠，SpaceX的猛禽2号，悬停鼠标，整机分成十一个组件散开，按I键点火。",
+          en: "The next one is even wilder: SpaceX's Raptor 2. Hover your mouse and the entire engine separates into eleven assemblies; press the I key to ignite."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 加力全开", en: "20s · Afterburner Reheat" },
-        headline: { zh: "双环燃油喷管点火，超音速尾喷口急剧扩张", en: "Dual fuel spray rings ignite, supersonic convergent-divergent nozzle expands" },
-        detail: { zh: "按下空格键激活加力燃烧室，环形喷油圈喷出雾化航空煤油，尾喷口鱼鳞调节板向外扩张，模拟 300 kN 极限过载推力。", en: "Press Space to kick the afterburner: fuel rings vaporize kerosene, iris flaps expand, simulating 300 kN extreme overload thrust." },
-        metrics: { zh: ["鱼鳞状可调收扩喷口", "环状加力喷油圈", "300 kN 极限过载推力"], en: ["Iris convergent-divergent nozzle", "Dual afterburner spray rings", "300 kN maximum overload thrust"] },
-        stageCue: "AFTERBURNER_FIRE",
+        label: { zh: "20s · 300大气压点火", en: "20s · 300-Bar Ignition" },
+        headline: { zh: "按 I 键点火：液氧与甲烷在 300 bar 主燃烧室碰头", en: "LOX and methane preburners meet inside the 300-bar main combustion chamber" },
+        detail: { zh: "富氧与富燃两股热气在 300 bar 主燃烧室汇合，WebGL 着色器在等轴相机内实时喷涌马赫环尾焰与水冷蒸汽。", en: "Oxygen-rich and fuel-rich hot gases meet at 300 bar as the WebGL plume and Mach diamonds roar to life." },
+        metrics: { zh: ["按 I 键触发实时点火", "主燃烧室 Pc = 300 bar", "WebGL 尾焰 + 马赫环"], en: ["Live Key [I] ignition", "Main chamber Pc = 300 bar", "Full-flow staged combustion"] },
+        stageCue: "RAPTOR_IGNITE",
         scriptText: {
-          zh: "按一下空格，加力燃烧室点火，尾喷口的钛合金收扩片瞬间张开，火焰从喷口喷涌而出，整台发动机在等轴测视角下轰鸣震颤。",
-          en: "Tap Space to ignite the afterburner. Titanium nozzle flaps expand outward, flames surge, and the engine shakes in isometric perspective."
+          zh: "每一滴液氧先过富氧预燃室，带动氧泵，每一滴甲烷走富燃预燃室，两股热气在300个大气压的主燃烧室碰头。",
+          en: "Every drop of liquid oxygen passes through the oxygen-rich preburner to drive the LOX pump; every drop of methane runs through the fuel-rich preburner, and the two hot gas streams collide inside the 300-bar main chamber."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 复杂性突破", en: "30s · Complexity Mastery" },
-        headline: { zh: "超越传统示意图，达到工程级真实度标准", en: "Surpassing traditional diagrams to reach genuine engineering-grade fidelity" },
-        detail: { zh: "几百个精密配合零件，无一人工在 CAD 软件里建模，全部由 Claude 解析物理公式后纯代码直接生成。", en: "Hundreds of interlocking parts, zero CAD drafting, purely synthesized from physics formulas by Claude directly into code." },
-        metrics: { zh: ["纯代码生成几百个零件", "工程力学模型支撑", "重塑工程知识传播方式"], en: ["Hundreds of parts from code", "Grounded in engineering physics", "Redefining technical education"] },
-        stageCue: "HEAVY_RUN",
+        label: { zh: "30s · 38分钟与10小时", en: "30s · 38 Minutes vs 10 Hours" },
+        headline: { zh: "第一版 38 分钟跑通，改到挑不出毛病又花了 10 小时", en: "The first working version took 38 minutes; making it flawless took 10 more hours" },
+        detail: { zh: "切回官方 turbofan 全速试车：能跑的第一版只需 38 分钟，但做到零穿插、零断线花费了整整十小时。", en: "A runnable first draft came out in 38 minutes, followed by 10 hours of relentless geometric auditing and refinement." },
+        metrics: { zh: ["首版成型：38 分钟", "深度打磨：+10 小时", "两台重工传奇同台"], en: ["First working draft: 38 min", "Zero-defect polish: +10 hrs", "Two aerospace icons"] },
+        stageCue: "TRENT_TAKEOFF",
         scriptText: {
-          zh: "这证明了什么？证明了由大语言模型驱动的代码生成，已经有能力完成具备真实机械逻辑的工业级重型装备建模。",
-          en: "What does this prove? It proves LLM code synthesis can autonomously construct industrial-grade heavy machinery with kinematic integrity."
+          zh: "能跑的第一版，38分钟就出来了。改到挑不出毛病，又花了十个小时。",
+          en: "A working first version came out in just 38 minutes. Refining it until not a single flaw remained took another ten hours."
         }
       }
     ]
@@ -725,82 +733,82 @@ export const CHAPTERS: Chapter[] = [
     id: "ch09",
     index: 8,
     number: "09",
-    title: { zh: "相机与审计", en: "Camera Perspective and Visual Audit" },
+    title: { zh: "相机与审计", en: "Camera & Geometric Audit" },
     subtitle: { zh: "OFFICIAL FIGURES: LIT-BY-FACING · EASING · TURBOFAN · THREE-READS", en: "Official Figures: Lit-By-Facing · Easing · Turbofan · Three Reads" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "lit-by-facing",
     thesis: {
-      zh: "AI 会画错，但通过多重视角相机审计与法线光照检查，错误在提交前被全部绞杀。",
-      en: "AI makes mistakes, but multi-camera audits and surface-normal checks snuff them out before delivery."
+      zh: "零件一多，人眼根本调不动前后顺序 —— 必须用几何射线审计脚本来证明。",
+      en: "Once part counts climb, human eyes cannot sort depth order — automated ray-cast auditing takes over."
     },
     takeaway: {
-      zh: "全方位镜头审计 · 法线与投影双重校准规避穿模",
-      en: "Omni-directional camera audit · Normal vectors & projections prevent clipping"
+      zh: "541 个实体 · 6,320 对重叠 · 62.4 秒射线验完零问题",
+      en: "541 solids · 6,320 overlapping pairs · Verified in 62.4 seconds with zero errors"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [lit-by-facing] · SURFACE-NORMAL ILLUMINATION AUDIT";
-        if (beat === 1) return "OFFICIAL [easing] · CUBIC-BEZIER ACCELERATION CAM CURVES";
-        if (beat === 2) return "OFFICIAL [turbofan] · 360-DEGREE CAMERA ORBITAL AUDIT";
-        return "OFFICIAL [three-reads] · TRIPLE-RENDER RECONCILIATION";
+        if (beat === 0) return "OFFICIAL [lit-by-facing] · AZIMUTH 45° · ELEVATION 30° · 4-TONE";
+        if (beat === 1) return "OFFICIAL [easing] · SPLIT COIL PAINTER'S ORDER";
+        if (beat === 2) return "OFFICIAL [turbofan] · 541 SOLIDS · 6,320 OVERLAPS · 62.4s · 0 ERRORS";
+        return "OFFICIAL [three-reads] · RAPTOR V1 CAUGHT 54 INTERSECTIONS · 323 ORDER ERRORS";
       }
-      if (beat === 0) return "OFFICIAL [lit-by-facing] · 面法线矢量光照审计";
-      if (beat === 1) return "OFFICIAL [easing] · 三次贝塞尔缓动凸轮曲线";
-      if (beat === 2) return "OFFICIAL [turbofan] · 360度相机轨道漫游审计";
-      return "OFFICIAL [three-reads] · 三重渲染一致性交叉核对";
+      if (beat === 0) return "OFFICIAL [lit-by-facing] · 方位角 45° · 俯角 30° · 四档明暗锁死相机";
+      if (beat === 1) return "OFFICIAL [easing] · 画家算法 · 弹簧劈成前后两半夹住立柱";
+      if (beat === 2) return "OFFICIAL [turbofan] · 541 实体 · 6,320 对重叠 · 62.4s 验完零问题";
+      return "OFFICIAL [three-reads] · 猛禽首版抓出 54 处穿插 · 323 处顺序错误";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 法线检查", en: "00s · Normal Check" },
-        headline: { zh: "面法线着色审计：一眼揪出破面与翻面错误", en: "Surface-normal shading audit catches broken and flipped faces instantly" },
-        detail: { zh: "通过给每个多边形的面法向赋予绝对基准色，朝向错误的逆法线多边形在着色器检查模式下无所遁形。", en: "Assigning base hues to face normals makes inverted polygons stand out unmistakably during shader audit modes." },
-        metrics: { zh: ["法向绝对矢量着色", "翻面破面实时报警", "光照模型数学自洽"], en: ["Absolute vector normal shading", "Inverted face alert", "Self-consistent lighting math"] },
-        stageCue: "NORMAL_CHECK",
+        label: { zh: "00s · 正交相机与四档明暗", en: "00s · Orthographic Camera" },
+        headline: { zh: "方位角 45°、俯角 30°，平行边永远平行，四档明暗锁死相机", en: "Azimuth 45°, elevation 30°: parallel edges stay parallel, 4 tones locked to camera" },
+        detail: { zh: "舞台运行官方 lit-by-facing（双灯转台摄影棚）：直观演示每个侧面如何按法线朝向自动计算四级明暗。", en: "Stage runs official lit-by-facing: every face is shaded into 4 tones by its orientation relative to the camera-locked light." },
+        metrics: { zh: ["官方 lit-by-facing 摄影台", "方位角 45° / 俯角 30°", "lo / mid / hi / lit 四档明暗"], en: ["Official lit-by-facing rig", "Azimuth 45° / Elevation 30°", "4-tone camera-locked shading"] },
+        stageCue: "CAM_ORTHO",
         scriptText: {
-          zh: "有人会问：AI 画机器难道不会画穿模、画歪吗？当然会。但 Anatomy 有一套严密的自审机制，第一步就是面法线光照审计。",
-          en: "People ask: Doesn't AI draw clipping parts and distorted angles? Of course it can. But Anatomy runs a strict self-audit using normal shaders."
+          zh: "程序员朋友，这部分是给你的。所有图共用一个正交相机，方位角45度，俯角30度，平行边永远平行，零件摆在哪都不变形。每个侧面按朝向分四档明暗，光源锁死在相机上。",
+          en: "Programmer friends, this part is for you. Every figure shares one orthographic camera — 45-degree azimuth, 30-degree elevation — so parallel edges stay parallel without distortion. Faces take four shading tones with the light locked to the camera."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 缓动曲线", en: "10s · Easing Curves" },
-        headline: { zh: "三次贝塞尔凸轮曲线，消除机械生硬感", en: "Cubic-bezier cam curves eliminate mechanical rigidity and synthetic stiffness" },
-        detail: { zh: "拒绝匀速直线运动，所有加速度均被映射到三次贝塞尔弹簧缓动曲线上，完美还原物理机件的惯性启动与阻尼刹车。", en: "Forbids uniform linear motion; all accelerations map to cubic-bezier spring curves, capturing physical inertia and damped stops." },
-        metrics: { zh: ["Cubic-Bezier 动力学曲线", "质量惯性物理模拟", "末端回弹阻尼微动"], en: ["Cubic-bezier dynamics", "Mass inertia simulation", "Terminal spring rebound damping"] },
-        stageCue: "EASING_CURVE",
+        label: { zh: "10s · 弹簧劈开画家算法", en: "10s · Split-Coil Painter's Order" },
+        headline: { zh: "弹簧绕柱子怎么画？劈成前后两半，把柱子夹在中间", en: "How to draw a spring wrapping a post? Split the coil into back and front halves" },
+        detail: { zh: "舞台切入官方 easing（阻尼弹簧台）：SVG 画家算法从后往前画，环绕柱子的弹簧必须切分为后半圈、立柱、前半圈。", en: "Stage switches to official easing: Painter's algorithm draws back-to-front, sandwiching the central post between split half-coils." },
+        metrics: { zh: ["官方 easing 弹簧机构", "画家算法从后往前画", "后半簧 → 立柱 → 前半簧"], en: ["Official easing spring rig", "Back-to-front Painter's algorithm", "Back coil → Post → Front coil"] },
+        stageCue: "COIL_SPLIT",
         scriptText: {
-          zh: "第二是动态审计。机械运动绝不能是死板的匀速。启动时要吃质量惯性，制动时要有阻尼回弹，曲线全部用三次贝塞尔严格约束。",
-          en: "Second is kinematic audit. Real parts never move at dead constant speeds. They overcome inertia when starting and rebound with damping when stopping."
+          zh: "深度排序用画家算法，从后往前画。弹簧绕着柱子这种前后穿插的，把弹簧劈成前后两半，柱子画在中间。",
+          en: "Depth sorting uses the painter's algorithm, drawing from back to front. When a spring wraps around a post, you split the spring into back and front halves and draw the post right in the middle."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 轨道漫游", en: "20s · Orbit Inspection" },
-        headline: { zh: "多角度虚拟相机漫游，消除视角盲区破绽", en: "Multi-angle virtual camera traversal eradicates blind spot glitches" },
-        detail: { zh: "虚拟相机绕机器进行三维轨道漫游，检查不同缩放与旋转角度下的遮挡关系与图层层叠顺序 (Z-Index)。", en: "Virtual camera orbits the assembly, validating occlusion relationships and SVG DOM z-index stacking from every viewpoint." },
-        metrics: { zh: ["全轨道视角遍历", "图层 Z-Index 遮挡核查", "无死角视觉自洽"], en: ["Full orbital viewpoint traversal", "DOM z-index occlusion audit", "360-degree visual consistency"] },
-        stageCue: "ORBIT_CAM",
+        label: { zh: "20s · 射线重叠审计", en: "20s · Ray-Cast Audit Script" },
+        headline: { zh: "给每对重叠零件发射线测深度：6,320 对重叠 62.4 秒验完", en: "Firing rays across every overlapping pair: 6,320 overlaps verified in 62.4s" },
+        detail: { zh: "舞台切入官方 turbofan（遄达970）：541 个三维实体、6,320 对重叠，审计脚本发射采样射线在 62.4 秒内完成零错误证明。", en: "On Trent 970, the audit script tested 541 solids and 6,320 overlapping pairs in 62.4 seconds with zero errors." },
+        metrics: { zh: ["遄达：541 个三维实体", "6,320 对屏幕重叠检测", "62.4 秒验证 · 0 错误"], en: ["Trent 970: 541 3D solids", "6,320 overlapping pairs tested", "62.4s verification · 0 errors"] },
+        stageCue: "RAY_SCAN",
         scriptText: {
-          zh: "第三是相机巡检。Anatomy 让虚拟相机绕着刚建好的机器转一圈，检查在不同角度下零件有没有穿帮，图层的遮挡关系是否绝对正确。",
-          en: "Third is camera inspection. Anatomy sweeps a virtual camera around the machine to verify part occlusions and layering from all angles."
+          zh: "零件一多，人眼调不动顺序，就交给审计脚本。它给每对重叠零件发射线，测出谁在前。遄达那一次，541个实体，6320对重叠，62.4秒验完，零问题。",
+          en: "Once part counts grow, human eyes can't sort the order, so an audit script takes over. It fires rays through every overlapping pair to test which sits in front. On Trent, 541 solids and 6,320 overlaps verified in 62.4 seconds — zero issues."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 三重校核", en: "30s · Triple Check" },
-        headline: { zh: "代码、几何、视觉三重闭环，保障成品交付", en: "Code, geometry, and optics form a triple closed loop for flawless delivery" },
-        detail: { zh: "代码层做类型校验，几何层做公差干涉运算，视觉层做无头浏览器截图比对，三重保险确保零低级缺陷。", en: "TypeScript types at the code level, collision checks at the geometry level, headless rendering at the optics level." },
-        metrics: { zh: ["TypeScript 静态断言", "无头浏览器截图比对", "零人工修图交付"], en: ["TypeScript static assertions", "Headless browser visual diff", "Zero manual retouching"] },
-        stageCue: "AUDIT_PASS",
+        label: { zh: "30s · 猛禽首版捉虫单", en: "30s · Raptor V1 Bug Catch" },
+        headline: { zh: "猛禽第一版跑审计：当场抓出 54 处管路穿插、323 处顺序错误", en: "Raptor V1 audit caught 54 geometry intersections and 323 z-order errors" },
+        detail: { zh: "舞台切入官方 three-reads：没有确定性几何审计，AI 生成的复杂管路必然穿插错乱。", en: "Stage switches to official three-reads: on the first version of Raptor, the audit script caught 54 intersections and 323 order errors." },
+        metrics: { zh: ["官方 three-reads 采样仪", "猛禽V1 抓出 54 处穿插", "抓出 323 处遮挡顺序错误"], en: ["Official three-reads gauge", "Raptor V1: 54 intersections", "323 depth-order errors caught"] },
+        stageCue: "AUDIT_DIFF",
         scriptText: {
-          zh: "经过类型检查、物理干涉计算、再加上图像比对这三重闭环，AI 自己造的机器，甚至比许多人类手绘的图表还要精准可靠。",
-          en: "Combining type checks, collision calculations, and headless rendering audits, AI machines achieve fidelity rivaling human master drafters."
+          zh: "猛禽第一版，审计抓出54处穿插，323处顺序错误。",
+          en: "On the first version of Raptor, the audit script caught 54 part intersections and 323 depth-ordering errors."
         }
       }
     ]
@@ -809,82 +817,82 @@ export const CHAPTERS: Chapter[] = [
     id: "ch10",
     index: 9,
     number: "10",
-    title: { zh: "一群 AI 互相挑错", en: "Multi-AI Adversarial Review" },
+    title: { zh: "一群 AI 互相挑错", en: "A Team of AIs Finding Faults" },
     subtitle: { zh: "OFFICIAL FIGURES: MARK-SWEEP · FOUR-FRAMES · TURBOFAN · FROSTED-COPY", en: "Official Figures: Mark & Sweep · Four Frames · Turbofan · Frosted Copy" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "mark-sweep",
     thesis: {
-      zh: "设计者、工程师与质检员：三个 AI 子代理在流水线上展开激烈的对抗性博弈。",
-      en: "Architect, Engineer, and Inspector: Three AI subagents engage in fierce adversarial games on the pipeline."
+      zh: "评审 Agent 绝不听信建造者的报告，而是自己重建页面、重跑审计、自己截图。",
+      en: "Reviewer agents never trust the builder's report — they rebuild the page, re-run the audit, and take their own screenshots."
     },
     takeaway: {
-      zh: "多代理对抗质检 · 终结大模型‘自吹自擂’的幻觉怪圈",
-      en: "Multi-agent adversarial review · Breaks LLM self-congratulatory hallucinations"
+      zh: "三轮评审留下 309 张截图 · 50×45 像素放大到 800×720 抓出叶片折痕",
+      en: "309 screenshots across 3 review rounds · 50×45px blown up to 800×720px to catch a folded blade"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [mark-sweep] · GARBAGE COLLECTION MARK-SWEEP SENTRY";
-        if (beat === 1) return "OFFICIAL [four-frames] · ADVERSARIAL MULTI-STAGE ARTIFACT AUDIT";
-        if (beat === 2) return "OFFICIAL [turbofan] · PEER REVIEW STRESS COLLISION BENCH";
-        return "OFFICIAL [frosted-copy] · FROSTED GLASS TRANSLUCENCY COMPARATOR";
+        if (beat === 0) return "OFFICIAL [mark-sweep] · BUILDER + REVIEWERS + FIXER LOOP";
+        if (beat === 1) return "OFFICIAL [four-frames] · 3 ROUNDS · 309 SCREENSHOTS";
+        if (beat === 2) return "OFFICIAL [turbofan] · 16x ZOOM (50x45 -> 800x720 px) FAN BLADE";
+        return "OFFICIAL [frosted-copy] · 0.6 PITCH SMOOTH FADE FIX";
       }
-      if (beat === 0) return "OFFICIAL [mark-sweep] · 标记清除垃圾回收岗哨";
-      if (beat === 1) return "OFFICIAL [four-frames] · 对抗性多工位阶段制品审查";
-      if (beat === 2) return "OFFICIAL [turbofan] · 同行评审碰撞干涉极限压测";
-      return "OFFICIAL [frosted-copy] · 毛玻璃半透光干涉比对器";
+      if (beat === 0) return "OFFICIAL [mark-sweep] · 建造者 + 评审 + 修复工 · 进度文件持久化";
+      if (beat === 1) return "OFFICIAL [four-frames] · 独立重建与截图 · 遄达三轮留下 309 张截图";
+      if (beat === 2) return "OFFICIAL [turbofan] · 50×45 像素放大到 800×720 揪出叶片折薄";
+      return "OFFICIAL [frosted-copy] · 完整绘制每片叶子 + 0.6 节距淡出修复";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 垃圾回收", en: "00s · Garbage Collection" },
-        headline: { zh: "垃圾回收岗哨：清除冗余废料与脱靶机件", en: "Garbage collection sentry: Clears orphaned elements and detached geometry" },
-        detail: { zh: "如同一套高效的 Mark-Sweep 机制，实时标记未被传动链关联的孤立零件，并将其自动移出 DOM 渲染树。", en: "Acts as a live Mark-Sweep pass, tagging isolated parts unlinked from drive chains and purging them from the DOM tree." },
-        metrics: { zh: ["孤立节点实时扫描", "无用 DOM 元素彻底清除", "保障渲染 60 FPS"], en: ["Orphan node live scan", "Dead DOM element purge", "Sustained 60 FPS delivery"] },
-        stageCue: "GC_SWEEP",
+        label: { zh: "00s · 多Agent流水班组", en: "00s · Builder, Reviewers & Fixer" },
+        headline: { zh: "1 个建造者 + 几个评审 + 1 个修复工，接力转到零瑕疵为止", en: "One builder, several reviewers, and one fixer looping until zero flaws remain" },
+        detail: { zh: "舞台运行官方 mark-sweep（模块化合成器）：每个 Agent 维护独立进度文件，随时打断随时续接。", en: "Each agent maintains its own progress file on disk so work resumes cleanly even if interrupted mid-run." },
+        metrics: { zh: ["官方 mark-sweep 合成器", "Builder + Reviewers + Fixer", "进度文件持久化防中断"], en: ["Official mark-sweep rig", "Builder + Reviewers + Fixer", "Persistent progress files"] },
+        stageCue: "AGENT_LOOP",
         scriptText: {
-          zh: "单个 AI 生成很容易自嗨。Anatomy 的精髓在于它不是一个 AI 在干活，而是一群 AI 扮演不同角色在工位上互相挑错。",
-          en: "A single AI easily traps itself in self-satisfaction. Anatomy's true power lies in multiple agents playing distinct roles to critique each other."
+          zh: "大一点的图，背后是一个小团队。一个建造者，几个评审，一个修复工，一轮一轮转，转到某一轮挑不出毛病为止。每个agent维护自己的进度文件，因为你随时会打断它，文件在，活就在。",
+          en: "Behind every larger figure sits a small team: one builder, several reviewers, and a fixer, cycling round after round until no flaws remain. Each agent keeps its own progress file — if you interrupt it, the file stays and the work lives on."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 四幕审查", en: "10s · Four Frames" },
-        headline: { zh: "四幕制品严密对比：几何、传动、材质与手感", en: "Four-frame scrutiny: Geometry, kinematics, material textures, and tactile response" },
-        detail: { zh: "质检 AI 将生成物按四幕拆开：基础拓扑是否合规、传动链条是否断裂、金属高光是否自然、交互事件是否灵敏。", en: "The Inspector AI decomposes artifacts across four panels: base topology, kinematic continuity, specular highlights, and touch feedback." },
-        metrics: { zh: ["四幕独立评审看板", "一票否决重绘机制", "各司其职专业分工"], en: ["4-frame independent review", "Veto and redraw mechanism", "Specialized agent division"] },
-        stageCue: "FOUR_FRAMES_REVIEW",
+        label: { zh: "10s · 独立重建与截图", en: "10s · 309 Review Screenshots" },
+        headline: { zh: "评审不看报告点头：自己重建页面、重跑审计、自己截图", en: "Reviewers never just nod at reports: they rebuild, re-audit, and screenshot" },
+        detail: { zh: "舞台切入官方 four-frames（四帧审校台）：遄达 970 历经三轮独立评审，足足留下 309 张检验截图。", en: "Stage switches to official four-frames: three review rounds on Trent 970 left behind 309 verification screenshots." },
+        metrics: { zh: ["官方 four-frames 四帧台", "独立重建 + 独立跑审计", "三轮留下 309 张截图"], en: ["Official four-frames bench", "Independent rebuild & audit", "309 screenshots in 3 rounds"] },
+        stageCue: "REVIEW_309",
         scriptText: {
-          zh: "第一个 AI 负责画结构，第二个工程师 AI 负责查传动，第三个挑刺质检 AI 拿着放大镜查穿模。发现一处错误，直接驳回重做。",
-          en: "Agent 1 drafts geometry, Agent 2 validates kinematics, and Agent 3 audits collisions with a magnifying glass. One failure triggers an instant redraw."
+          zh: "评审不看建造者的报告点头，他们自己重建页面，重跑审计，自己截图。遄达三轮评审留下309张截图。",
+          en: "Reviewers don't just nod at the builder's report. They rebuild the page themselves, re-run the audit, and capture their own screenshots. Three rounds on Trent left behind 309 screenshots."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 极限压测", en: "20s · Extreme Stress" },
-        headline: { zh: "高转速高负载极限压测，验证零件刚体边界", en: "High-rpm high-load stress testing proves rigid body boundary limits" },
-        detail: { zh: "让整台设备在 10 倍速极速运转，检测关键传动节点在极端边界值下是否发生数值溢出或坐标抖动破裂。", en: "Spins assemblies at 10x overdrive to check whether linkage joints suffer numeric overflow or coordinate jitter under extreme limits." },
-        metrics: { zh: ["10× 超速压力测试", "数值精度溢出检测", "极端边界刚体防抖"], en: ["10x overdrive stress test", "Floating point overflow catch", "Extreme limit jitter stabilization"] },
-        stageCue: "STRESS_TEST",
+        label: { zh: "20s · 16倍微距抓虫", en: "20s · 50×45 Blown Up to 800×720" },
+        headline: { zh: "把 50×45 像素放大到 800×720，揪出风扇叶片切口折成薄片", en: "Zooming a 50×45px patch to 800×720px caught fan blades folding at the cutaway" },
+        detail: { zh: "舞台切入官方 turbofan 并自动推镜放大风扇剖切口：发现叶片在切口处被折成了纸片。", en: "Camera zooms into the turbofan cutaway: a reviewer blew up a 50×45px crop to 800×720px and found blades crimped flat." },
+        metrics: { zh: ["官方 turbofan 微距推镜", "50×45 px 放大至 800×720", "揪出剖切处叶片折薄"], en: ["Official turbofan close-up", "50×45px zoomed to 800×720px", "Caught blade cutaway crimp"] },
+        stageCue: "BLADE_ZOOM",
         scriptText: {
-          zh: "不仅要静态看，质检 AI 还会给机器加上十倍速狂转，看看在最极端的极限速度下，齿轮会不会卡死，数值计算会不会浮点溢出。",
-          en: "Static checks are not enough. The Inspector spins the machine at 10x speed to verify no teeth lock up and floating-point errors stay zero."
+          zh: "有一轮，评审把风扇叶片一块50乘45像素的区域放大到800乘720，发现叶片在切口处折成了薄片。",
+          en: "In one round, a reviewer blew up a 50-by-45-pixel patch of the fan blades to 800-by-720, discovering the blades were folding into flat ribbons at the cutaway."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 品质收敛", en: "30s · Quality Convergence" },
-        headline: { zh: "经过多轮对抗博弈，最终淬炼出无懈可击的精品", en: "Adversarial games converge toward bulletproof engineering perfection" },
-        detail: { zh: "正是这套严密的代理间博弈协议，使得即使在零人工干预的情况下，产出的机件依然具备殿堂级的艺术与工业品质。", en: "This adversarial consensus loop enables zero-human-input pipelines to reliably craft museum-grade engineering artwork." },
-        metrics: { zh: ["零人工审查通过率", "多代理博弈收敛", "殿堂级工业品味"], en: ["Autonomous pass rate", "Multi-agent game convergence", "Museum-grade industrial aesthetic"] },
-        stageCue: "FROSTED_PASS",
+        label: { zh: "30s · 0.6节距优雅淡出", en: "30s · 0.6-Pitch Fade Fix" },
+        headline: { zh: "修复方案：每片叶子画完整，再用 0.6 个节距平滑淡出", en: "The fix: draw every blade whole and fade it out smoothly over 0.6 pitch" },
+        detail: { zh: "舞台切入官方 frosted-copy：完整绘制每片叶子再用 0.6 节距渐隐。这套多 Agent 验收流在任何 AI 项目都管用。", en: "Stage switches to official frosted-copy: draw each blade intact and fade over 0.6 pitch — a workflow ready for any AI codebase." },
+        metrics: { zh: ["官方 frosted-copy 渐隐光学", "完整叶片 + 0.6 节距淡出", "通用 AI 工程质量护栏"], en: ["Official frosted-copy optics", "Full blade + 0.6 pitch fade", "Universal AI QA workflow"] },
+        stageCue: "BLADE_FIXED",
         scriptText: {
-          zh: "这种多 AI 对抗协议彻底终结了大模型的‘自吹自擂’。最后端到你面前的作品，是经过严苛内部质检对抗后的顶级结晶。",
-          en: "This adversarial protocol eradicates LLM hallucinations. The output presented to you is forged through rigorous internal trials."
+          zh: "修复方案，每片叶子画完整，再用0.6个节距淡出。这套流程，拿去管你自己的AI编码项目，一样好使。",
+          en: "The fix: draw every blade intact, then fade it out across 0.6 of a pitch. Take this exact workflow to manage your own AI coding projects and it works just as well."
         }
       }
     ]
@@ -893,82 +901,82 @@ export const CHAPTERS: Chapter[] = [
     id: "ch11",
     index: 10,
     number: "11",
-    title: { zh: "时间的真相", en: "The Truth of Time" },
-    subtitle: { zh: "OFFICIAL FIGURES: WATCH · SEASONS · POWER-STATION · TURBOFAN", en: "Official Figures: Watch · Seasons · Power Station · Turbofan" },
+    title: { zh: "时间的真相", en: "The Truth About Build Time" },
+    subtitle: { zh: "OFFICIAL FIGURES: WATCH (1h54m) · SEASONS (1h57m) · RAPTOR (10h33m) · TURBOFAN (14h)", en: "Official Figures: Watch (1h54m) · Seasons (1h57m) · Raptor (10h33m) · Turbofan (14h)" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "watch",
     thesis: {
-      zh: "时间不是均匀流逝的标量，在机械世界里，时间是被齿轮齿距一次次切碎的离散脉冲。",
-      en: "Time is not a smooth scalar; in mechanics, time is a stream of discrete pulses sliced tooth by tooth."
+      zh: "不管机器多大，第 1 个小时内一定有能跑的页面，剩下 90% 的时间全花在“第二眼”上。",
+      en: "No matter the scale, a working page appears within the first hour — the remaining 90% goes to the second look."
     },
     takeaway: {
-      zh: "连续流动 vs 离散切分 · 机械世界里对时间本质的深刻审视",
-      en: "Continuous flow vs discrete slices · Mechanical introspection on the nature of time"
+      zh: "生成只是起点，验收才是正文",
+      en: "Generation is merely the starting line; verification is the real work"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [watch] · 28,800 BEATS PER HOUR · MECHANICAL QUANTUM";
-        if (beat === 1) return "OFFICIAL [seasons] · ORBITAL PRECESSION & AXIAL TILT TIME";
-        if (beat === 2) return "OFFICIAL [power-station] · 50HZ GRID PHASE SYNCHRONIZATION";
-        return "OFFICIAL [turbofan] · THERMODYNAMIC UNIDIRECTIONAL ENTROPY";
+        if (beat === 0) return "OFFICIAL [watch] · 1h 54m ACTIVE TIME · SINGLE PASS";
+        if (beat === 1) return "OFFICIAL [seasons] · 1h 57m ACTIVE TIME · FIRST HOUR LAW";
+        if (beat === 2) return "OFFICIAL [raptor-engine] · 10h 33m TOTAL · 4x ZOOM DEFECT HUNT";
+        return "OFFICIAL [turbofan] · 14h 00m TOTAL (4h41m + 5 REVIEW ROUNDS)";
       }
-      if (beat === 0) return "OFFICIAL [watch] · 28,800 次/小时 · 机械时间量子";
-      if (beat === 1) return "OFFICIAL [seasons] · 轨道进动与地轴倾角时间尺度";
-      if (beat === 2) return "OFFICIAL [power-station] · 50Hz 电网相位同步与力矩平衡";
-      return "OFFICIAL [turbofan] · 热力学单向不可逆熵增时间箭头";
+      if (beat === 0) return "OFFICIAL [watch] · 有效工时 1h 54m 一次通过 · 猛禽 10h33m · 遄达 14h";
+      if (beat === 1) return "OFFICIAL [seasons] · 首小时必出可跑页面 · 大头花在第二眼";
+      if (beat === 2) return "OFFICIAL [raptor-engine] · 放大四倍抓虫: 电缆穿管 / 喷口阴影断层";
+      return "OFFICIAL [turbofan] · 14h 五轮评审修复 · 生成只是起点，验收才是正文";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 离散量子", en: "00s · Discrete Quantum" },
-        headline: { zh: "每小时 28,800 次滴答：时间被擒纵叉切成离散颗粒", en: "28,800 ticks per hour: Time sliced into discrete packets by the pallet fork" },
-        detail: { zh: "摆轮游丝以 4Hz 高频摆动，每一次释放都是一个不可分割的时间量子，连续时间在此崩解为离散数值。", en: "Balance spring oscillates at 4Hz; every impulse is an indivisible time quantum, discretizing continuous flow." },
-        metrics: { zh: ["4Hz / 28,800 vph 频率", "0.125 秒时间微颗粒", "机械离散化哲学"], en: ["4Hz / 28,800 vph frequency", "0.125s discrete time grain", "Mechanical discretization"] },
-        stageCue: "WATCH_QUANTUM",
+        label: { zh: "00s · 真实有效工时", en: "00s · Active Compute Hours" },
+        headline: { zh: "只算 Claude 有效工时：机械表 1h54m、四季 1h57m、猛禽 10h33m、遄达 14h", en: "Pure active Claude time: Watch 1h54m, Seasons 1h57m, Raptor 10h33m, Trent 14h" },
+        detail: { zh: "舞台展示官方 watch（1h54m）：口径极度干净，评审轮次算在内，人类发呆等待一秒不算。", en: "Clean accounting: counts only active Claude work including review rounds, excluding idle waiting time." },
+        metrics: { zh: ["官方 watch：1h 54m", "官方 seasons：1h 57m (3D)", "猛禽 10h33m / 遄达 14h"], en: ["Watch: 1h54m / Seasons: 1h57m", "Raptor: 10h33m active time", "Trent: 14h (4h41m + 5 rounds)"] },
+        stageCue: "TIME_WATCH",
         scriptText: {
-          zh: "我们总觉得时间像流水一样平滑。但机械表告诉你：时间不是流动的，时间是被切碎的。一秒钟被擒纵叉咔嗒咔嗒切成八瓣。",
-          en: "We perceive time as a smooth river. But the watch caliber proves otherwise: time is chopped into discrete packets, 8 beats per second."
+          zh: "成本方面，Ryan给的全是真数字，而且口径干净，只算Claude的有效工时，评审轮次算在内，发呆等待不算。机械表，一小时五十四分钟，一次通过。四季地球，一小时五十七分钟，还是3D的。猛禽发动机，十小时三十三分钟。遄达，十四小时，首版四小时四十一分，后面跟了五轮评审修复。",
+          en: "On cost, Ryan shares real numbers with clean accounting: only Claude's active working time counts, review rounds included, idle waiting excluded. Watch: 1h 54m in one pass. 3D Seasons: 1h 57m. Raptor: 10h 33m. Trent: 14 hours total — 4h 41m for v1 plus five review rounds."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 天文循环", en: "10s · Astronomical Scale" },
-        headline: { zh: "地轴倾角与日晷轨迹：宏观尺度下的周期律动", en: "Axial tilt and solar shadow arcs: Periodic cycles on astronomical scales" },
-        detail: { zh: "从微观齿轮跳跃到地球公转黄道平面，齿轮比化作 365 天四季轮回，时间从微观离散扩展为宏观天文周期。", en: "Leaping from watch escapements to orbital ecliptics, gear trains convert into 365-day seasonal rhythms." },
-        metrics: { zh: ["23.5° 地轴黄赤交角", "四季昼夜光影演进", "宏观与微观时间呼应"], en: ["23.5° axial obliquity", "Seasonal diurnal lighting", "Micro/macro temporal harmony"] },
-        stageCue: "SEASONS_YEAR",
+        label: { zh: "10s · 首小时定律", en: "10s · The First-Hour Rule" },
+        headline: { zh: "第一个小时内必出可运行页面，剩下的时间全花在加深它", en: "A runnable page always lands within hour one; the rest goes to deepening it" },
+        detail: { zh: "舞台切入官方 seasons（四季 3D 地球）：能跑的第一版来得极快，大头时间全花在“第二眼”上。", en: "Stage switches to official seasons: a working v1 arrives fast, while the bulk of the hours goes into the second look." },
+        metrics: { zh: ["官方 seasons 实时运转", "≤ 1 小时必出可跑页面", "大头时间全在“第二眼”"], en: ["Official seasons 3D tellurion", "Working page in ≤ 1 hour", "Bulk of time on the 2nd look"] },
+        stageCue: "TIME_SEASONS",
         scriptText: {
-          zh: "放大到第二台机器，地球公转与四季变化。齿轮比变成了三百六十五比一，时间的颗粒度从八分之一秒被拉长到整整一年的季节律动。",
-          en: "Zoom out to our second machine: orbital seasons. Gear ratios shift to 365 to 1, stretching granular eighth-seconds into whole annual seasons."
+          zh: "不管尺寸多大，第一个小时内，浏览器里一定有一张能跑的页面，剩下的时间全花在加深它。规律摆在这。能跑的第一版来得很快，大头时间全花在第二眼上。",
+          en: "No matter how large the build, within the first hour you always have a working page in the browser; the rest of the time goes into deepening it. The pattern is clear: v1 comes fast, and the real time is spent on the second look."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 电网相位", en: "20s · Grid Phase Sync" },
-        headline: { zh: "50Hz 电网同步：全网千万台发电机绝对同相运转", en: "50Hz grid sync: Tens of thousands of turbines running in absolute lockstep" },
-        detail: { zh: "发电机转子旋转频率必须与整个大陆电网的交流电相位维持微秒级对齐，任何时差都会引发剧烈机电震荡。", en: "Generator rotors must stay phase-aligned with continental grids to microsecond accuracy to avert massive electromechanical swings." },
-        metrics: { zh: ["50Hz 严格工频电网", "微秒级相位同步锁定", "力矩平衡稳定器"], en: ["50Hz strict grid frequency", "Microsecond phase alignment", "Torque balance stabilizer"] },
-        stageCue: "GRID_SYNC",
+        label: { zh: "20s · 四倍放大镜下的魔鬼", en: "20s · Devils at 4x Zoom" },
+        headline: { zh: "放大四倍看，毛病全藏在那：电缆穿管、阴影断层、叶片折薄", en: "Zoom in 4x and the bugs appear: cables piercing pipes, broken nozzle shadows" },
+        detail: { zh: "舞台切入官方 raptor-engine（10h33m）：放大四倍看，电缆穿过管道、喷口阴影断层等隐患全靠十小时深挖修平。", en: "Stage switches to official raptor-engine: at 4x zoom, cables clipping through pipes and broken nozzle shadows are hunted down." },
+        metrics: { zh: ["官方 raptor-engine 10h33m", "排查电缆穿管与阴影断层", "4× 放大镜逐个接头过筛"], en: ["Official Raptor 2 (10h 33m)", "Fixes cable-pipe clipping", "Fixes nozzle shadow breaks"] },
+        stageCue: "RAPTOR_EXPLODE",
         scriptText: {
-          zh: "再看电网。全国成千上万台巨型汽轮机，每秒钟必须严格旋转五十圈，相位相差微秒级就会烧毁电网。这是人类用钢铁铸造的统一时间场。",
-          en: "Consider the electrical grid: thousands of massive turbines revolving 50 times per second, phase-locked to microseconds."
+          zh: "放大四倍看，毛病全藏在那，电缆穿过管道，喷口阴影断层，叶片折成薄片。",
+          en: "Zoom in four times and that's where all the flaws hide: cables clipping through pipes, broken shadows on the nozzle, fan blades folded into flat strips."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 熵增之箭", en: "30s · Arrow of Entropy" },
-        headline: { zh: "单向喷涌的热力学之箭，标记着时间的不可逆性", en: "The unidirectional thermodynamic plume marks time's irreversible arrow" },
-        detail: { zh: "涡扇发动机喷出的熊熊烈焰展现了热力学第二定律：燃料燃烧转化为推力与废热，时间只能单向向前，绝无回头可能。", en: "Turbofan plumes illustrate the second law of thermodynamics: fuel expands into thrust and entropy. Time flows strictly forward." },
-        metrics: { zh: ["热力学第二定律不可逆", "单向膨胀燃烧做功", "物理时间的终极注脚"], en: ["Second law irreversibility", "Unidirectional expansion", "Ultimate physical footnote"] },
-        stageCue: "ENTROPY_FLAME",
+        label: { zh: "30s · 验收才是正文", en: "30s · Verification is the Real Work" },
+        headline: { zh: "用 AI 做过东西的人都懂：生成只是起点，验收才是正文", en: "Anyone who builds with AI knows: generation is just the start, verification is the real work" },
+        detail: { zh: "舞台切入官方 turbofan（14h，5轮评审修复）：生成只是 10% 的起点，严苛的验收才是 90% 的正文。", en: "Stage switches to official turbofan (14h, 5 review rounds): generation is the 10% opening act; verification is the 90% main text." },
+        metrics: { zh: ["官方 turbofan 14h 打磨", "生成 = 起点", "验收 = 正文"], en: ["Official Trent 970 (14h)", "Generation = Starting line", "Verification = Real work"] },
+        stageCue: "TIME_TURBOFAN",
         scriptText: {
-          zh: "最后在涡扇发动机的喷火口上，燃料燃烧膨胀，熵增不可逆转。Anatomy 用四台机器，把人类历史上对时间的所有理解，全部变成了可触碰的机械现实。",
-          en: "Finally, at the jet nozzle, fuel combusts and entropy climbs irreversibly. Across four machines, Anatomy turns humanity's conception of time into reality."
+          zh: "用AI做过东西都懂，生成只是起点，验收才是正文。",
+          en: "Anyone who has built real things with AI knows this: generation is just the starting line; verification is the main event."
         }
       }
     ]
@@ -983,76 +991,76 @@ export const CHAPTERS: Chapter[] = [
     stageType: "official-pkg",
     machineKey: "box-model",
     thesis: {
-      zh: "“这不就是画画吗？” —— 不，它不是绘画，是用高阶几何与数学严密推导出的机械工程系统。",
-      en: "“Isn't this just illustrations?” — No, it is a mechanical engineering system deduced from high-order geometry and mathematics."
+      zh: "“Claude 终于能生成图片了” —— 这类 90 万浏览的热帖，错在根上。",
+      en: "“Claude can finally generate images!” — Viral posts with 900K+ views got it fundamentally wrong."
     },
     takeaway: {
-      zh: "不是插画，是机械工程规范 · 严谨几何学打破刻板印象",
-      en: "Not illustrations, but mechanical specs · Rigorous geometry shatters stereotypes"
+      zh: "Claude 一个像素都没画：可编辑、可验证的代码，才能进生产环境",
+      en: "Claude didn't paint a single pixel: only editable, verifiable code belongs in production"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [box-model] · CSS BOX MODEL AS HARDWARE ENCLOSURE";
-        if (beat === 1) return "OFFICIAL [spot-plate] · MATRIX DRILL-HOLE JIG FIXTURE";
-        if (beat === 2) return "OFFICIAL [bevel-offset] · 45-DEGREE BEVEL CHAMFER TOOLPATH";
-        return "OFFICIAL [shared-canvas] · MULTI-LAYER COMPOSITING BACKPLANE";
+        if (beat === 0) return "MYTH BUSTED · OFFICIAL [box-model] · NOT PIXEL DIFFUSION (900K+ VIEWS)";
+        if (beat === 1) return "OFFICIAL [spot-plate] · PURE SVG + HTML + WEBGL CODE";
+        if (beat === 2) return "OFFICIAL [bevel-offset] · 1 MODEL PARAM DRIVES PART + READOUT + ANIM";
+        return "OFFICIAL [shared-canvas] · EDITABLE & AUDITABLE FOR PRODUCTION";
       }
-      if (beat === 0) return "OFFICIAL [box-model] · 实体机箱化 CSS 盒模型";
-      if (beat === 1) return "OFFICIAL [spot-plate] · 矩阵定位钻孔工装夹具";
-      if (beat === 2) return "OFFICIAL [bevel-offset] · 45度精密倒角仿形刀路";
-      return "OFFICIAL [shared-canvas] · 多层复合总线背板架构";
+      if (beat === 0) return "破除误读 · OFFICIAL [box-model] · 90万浏览热帖错在根上";
+      if (beat === 1) return "OFFICIAL [spot-plate] · 0 像素画图 · 纯 SVG + HTML + WebGL 代码";
+      if (beat === 2) return "OFFICIAL [bevel-offset] · 改一个数，零件、读数、动画一起变";
+      return "OFFICIAL [shared-canvas] · 可编辑 + 可验证 = 进生产环境的门票";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 实体盒模", en: "00s · Physical Box Model" },
-        headline: { zh: "CSS 盒模型变身铸铝机箱：外边距就是安装间隙", en: "CSS box model reimagined as cast chassis: Margins become clearance gaps" },
-        detail: { zh: "Margin 是底座安全螺栓间距，Padding 是内部减震垫层，Content 是主板核心芯片，前端概念全部实物化。", en: "Margin becomes bolt clearance, padding becomes vibration dampers, content becomes the central processing die." },
-        metrics: { zh: ["Margin 安装螺栓间距", "Padding 内部避震间距", "Border 实心铸铝机箱壁"], en: ["Margin bolt clearance", "Padding damper spacing", "Border cast aluminum wall"] },
-        stageCue: "BOX_CHASSIS",
+        label: { zh: "00s · 九十万浏览的误读", en: "00s · The 900K-View Myth" },
+        headline: { zh: "疯传“Claude 终于能画图了”？这个说法错在根上", en: "Viral posts claiming 'Claude can finally generate images' missed the point" },
+        detail: { zh: "舞台运行官方 box-model：90 万浏览的热帖把 Anatomy 当成了像素画图模型，彻底看反了技术本质。", en: "Stage runs official box-model: viral threads with 900K+ views mistook Anatomy for a pixel image generator." },
+        metrics: { zh: ["官方 box-model 机械盒", "驳斥 90 万浏览误读帖", "绝非像素生成模型"], en: ["Official box-model caliper", "Debunks 900K+ view myth", "Not a pixel diffusion model"] },
+        stageCue: "CODE_BOX_MODEL",
         scriptText: {
-          zh: "有人说：Anatomy 不就是让 AI 画几张漂亮的插画吗？这是对它最大的误读。看这个 CSS 盒模型，它不是画出来的，它是一座实实在在的铸铝机箱。",
-          en: "Some claim: Isn't Anatomy just AI drawing pretty illustrations? That is the biggest misconception. Look at this CSS box model — it is a CNC-milled chassis."
+          zh: "项目火了以后，传播最广的说法是Claude终于能生成图片了，这类帖子九十万浏览起步。这个说法错在根上。",
+          en: "After the project blew up, the most viral take — with over 900,000 views — claimed Claude could finally generate images. That claim is wrong at its root."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 工装夹具", en: "10s · Jig Fixture" },
-        headline: { zh: "点阵夹具板：每一个安装孔位都有绝对坐标约束", en: "Matrix spot plate: Every mounting hole is governed by absolute coordinates" },
-        detail: { zh: "绝非画家随性涂鸦，所有构件固定在标准 20mm 间距工装夹具底板上，每个孔位坐标由代数方程精确导出。", en: "No artistic improvisation: every component mounts onto a 20mm grid fixture plate driven by analytic geometry formulas." },
-        metrics: { zh: ["20mm 标准模数阵列", "数控机床定位基准", "严格对齐无公差积累"], en: ["20mm modular grid array", "CNC coordinate origin", "Zero cumulative tolerance drift"] },
-        stageCue: "SPOT_PLATE_JIG",
+        label: { zh: "10s · 一个像素都没画", en: "10s · Zero Pixels Painted" },
+        headline: { zh: "Claude 一个像素都没画，它写的是 SVG、HTML 与 WebGL 代码", en: "Claude didn't draw a single pixel — it writes SVG, HTML, and WebGL code" },
+        detail: { zh: "舞台切入官方 spot-plate（塞尺点滴板）：6 对玻璃水滴由距离场函数实时计算融合，100% 是结构化代码。", en: "Stage switches to official spot-plate: droplets merge via live mathematical distance fields — 100% code rendered by the browser." },
+        metrics: { zh: ["官方 spot-plate 塞尺点滴板", "0 像素位图 · 纯矢量代码", "距离场数学实时融合"], en: ["Official spot-plate rig", "Zero raster pixels · Pure code", "SVG + HTML + WebGL"] },
+        stageCue: "CODE_SPOT_PLATE",
         scriptText: {
-          zh: "所有机件安装在带有标准化螺孔的工装夹具板上。孔距、沉头螺钉深度、板材厚度，全部是机加工工程图纸的标准规范。",
-          en: "All parts mount on jig plates with standard threaded holes. Hole pitch, countersink depth, plate thickness meet machine-shop blueprints."
+          zh: "Claude一个像素都没画。它写的是代码，SVG、HTML、WebGL，浏览器把代码渲染成图。",
+          en: "Claude didn't paint a single pixel. It writes code — SVG, HTML, and WebGL — and the browser renders that code into visuals."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 精密倒角", en: "20s · Chamfer Toolpath" },
-        headline: { zh: "45度精密斜切倒角：高光修饰源自真实数控刀路", en: "45-degree chamfers: Specular rim lights traced directly from CNC cutter paths" },
-        detail: { zh: "边缘那一抹细腻的金属高光，不是手绘渐变色，而是按照 45° 倒角铣刀刀具路径算出的法线反光带。", en: "That delicate rim highlight along the edge is not painted shading; it is calculated specular reflection off a 45-degree chamfer toolpath." },
-        metrics: { zh: ["45° 数控铣刀刀路", "法线连续高光计算", "彻底剔除纸片感"], en: ["45° CNC milling toolpath", "Continuous normal specular line", "Eliminates flat paper feel"] },
-        stageCue: "BEVEL_CUTTER",
+        label: { zh: "20s · 改一个数全局联动", en: "20s · Single Source of Truth" },
+        headline: { zh: "改模型里的一个数，零件尺寸、仪表读数、动画一起跟着变", en: "Change one number in the model and parts, readouts, and animations update together" },
+        detail: { zh: "舞台切入官方 bevel-offset（倒角偏移量规）：所有零件、读数与动画读取同一份底层数据模型，改一处全局联动。", en: "Stage switches to official bevel-offset: every part has exact dimensions, backed by geometric audits and one shared model." },
+        metrics: { zh: ["官方 bevel-offset 倒角仪", "单点修改模型参数", "零件+读数+动画同步变"], en: ["Official bevel-offset gauge", "Change 1 number in model", "Parts, readouts & anim sync"] },
+        stageCue: "CODE_BEVEL",
         scriptText: {
-          zh: "机壳边缘那道反射高光，在数学上是一条经过四十五度倒角刀切削后的连续法线反射带。这不是绘画，这是计算机辅助制造级别的几何运算。",
-          en: "That specular highlight along the edge is mathematically derived from a 45-degree chamfer cutter path. This is CAD-grade geometric deduction."
+          zh: "区别很实在。代码做的图可以改，可以查，每个零件有尺寸，几何有审计背书。改模型里的一个数，零件、读数、动画一起跟着变，它们读的是同一份数据。",
+          en: "The difference is practical. Code-built figures can be edited and inspected; every part has dimensions backed by geometric audits. Change one number in the model, and the parts, readouts, and animation all update together from the same data."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 工程尊严", en: "30s · Engineering Dignity" },
-        headline: { zh: "给数字世界注入物理实体的重量感与工程尊严", en: "Injecting physical weight and engineering dignity into the digital world" },
-        detail: { zh: "把虚无缥缈的代码和无趣的方块图，转化为有质量、有扭矩、有温度的机械实体，这是技术的浪漫，也是工程的尊严。", en: "Transforming ephemeral code and boring wireframes into weighted, torqued, living machines: the romance of engineering." },
-        metrics: { zh: ["赋予纯数字以物理实体", "打破二维抽象隔阂", "极致工程工程美学"], en: ["Physicalizing the digital", "Overcomes 2D abstract silos", "Apex engineering aesthetic"] },
-        stageCue: "CANVAS_DONE",
+        label: { zh: "30s · 进生产环境的门票", en: "30s · Ticket to Production" },
+        headline: { zh: "可编辑 + 可验证，决定了它能进文档、进生产环境", en: "Editability and verifiability let it ship in real docs and production apps" },
+        detail: { zh: "舞台切入官方 shared-canvas：可查、可改、有几何审计背书的代码组件，才能真正进入严肃的生产环境文档。", en: "Stage switches to official shared-canvas: being editable and verifiable is why this belongs in production while dead bitmaps don't." },
+        metrics: { zh: ["官方 shared-canvas 组件", "可编辑 + 可数学验证", "直接嵌入生产环境"], en: ["Official shared-canvas rig", "Editable + verifiable", "Ships in production docs"] },
+        stageCue: "CODE_SHARED",
         scriptText: {
-          zh: "它把原本冰冷虚无的软件逻辑，变成了一个个沉甸甸、摸得着、看得懂的机械实体。这才是 Anatomy 真正撼动人心的力量所在。",
-          en: "It turns cold, formless software logic into heavy, tactile, comprehensible mechanical engines. That is the true heart of Anatomy."
+          zh: "很多人会觉得这是抠字眼，看起来差不多。但可编辑和可验证，决定了这东西能进文档、进生产环境，一张死图进不去。",
+          en: "Some might think that's splitting hairs since they look similar. But being editable and verifiable is what lets this enter documentation and production environments — a dead bitmap never could."
         }
       }
     ]
@@ -1067,76 +1075,76 @@ export const CHAPTERS: Chapter[] = [
     stageType: "official-pkg",
     machineKey: "debounce",
     thesis: {
-      zh: "开源 6 天突破 8,200 Stars：全球开发者自发用最具创意的交互算法为它投下信任票。",
-      en: "Over 8,200 stars in 6 days: Global developers cast their votes with creative interactive algorithms."
+      zh: "Claude 很会造，但不太会看 —— 管用的修复，来自你盯着它跑，说出哪里别扭。",
+      en: "Claude is great at building, but poor at seeing — real fixes come from watching it run and calling out what feels off."
     },
     takeaway: {
-      zh: "开源 6 天 8,200+ Stars · 社区创意井喷见证范式转移",
-      en: "8,200+ Stars in 6 days · Community explosion validates paradigm shift"
+      zh: "第一版当草稿 → 上手玩 → 说出哪里不对 → 再来一轮",
+      en: "Treat v1 as a draft → Play with it → Point out what feels off → Run another round"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [debounce] · SPRING-LOADED DELAY TRIGGER TRAP";
-        if (beat === 1) return "OFFICIAL [merge-sort] · DUAL-TRACK DIVIDE & CONQUER SIFTER";
-        if (beat === 2) return "OFFICIAL [gradient-descent] · BALLISTIC LOSS SURFACE OSCILLATOR";
-        return "OFFICIAL [flex-grow] · HYDRAULIC ACCORDION PROPORTIONAL EXPANSION";
+        if (beat === 0) return "OFFICIAL [debounce] · 6 DAYS: 2,100 -> 4,100 -> 8,203 STARS · 586 FORKS";
+        if (beat === 1) return "OFFICIAL [merge-sort] · 1.4M X VIEWS · 19,000+ BOOKMARKS";
+        if (beat === 2) return "OFFICIAL [gradient-descent] · CLAUDE BUILDS WELL, SEES POORLY";
+        return "OFFICIAL [flex-grow] · DRAFT -> PLAY -> CRITIQUE -> ITERATE";
       }
-      if (beat === 0) return "OFFICIAL [debounce] · 弹簧阻尼延时防抖绊发锁";
-      if (beat === 1) return "OFFICIAL [merge-sort] · 双轨分治归并排序筛分机";
-      if (beat === 2) return "OFFICIAL [gradient-descent] · 损失曲面滚珠梯度下降寻优";
-      return "OFFICIAL [flex-grow] · 液压风琴伸缩空间等比扩张";
+      if (beat === 0) return "OFFICIAL [debounce] · 6天增长: 2,100 → 4,100 → 8,203 星 · 586 Forks";
+      if (beat === 1) return "OFFICIAL [merge-sort] · 发布帖 140万浏览 · 1.9万收藏 · 全球二创";
+      if (beat === 2) return "OFFICIAL [gradient-descent] · 作者坦言: Claude 很会造，不太会看";
+      return "OFFICIAL [flex-grow] · 官方建议: 第一版当草稿 → 上手玩 → 挑错再来一轮";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 防抖阻尼", en: "00s · Debounce Damper" },
-        headline: { zh: "防抖函数化为弹簧连杆，连续冲击归一化", en: "Debounce turns into a spring-damped linkage, buffering chaotic pulses" },
-        detail: { zh: "频繁敲击被气缸阻尼器吸收，只有当撞击暂停指定毫秒后，后级绊发机构才释放一次有效动作。", en: "Rapid hammer strikes are absorbed by a dashpot damper; only when strikes pause does the trip lever release one action." },
-        metrics: { zh: ["气缸阻尼缓冲撞击", "可调毫秒防抖窗口", "单次有效触发保障"], en: ["Dashpot impact damper", "Adjustable ms debounce window", "Single clean trigger release"] },
-        stageCue: "DEBOUNCE_DAMP",
+        label: { zh: "00s · 六天八千星曲线", en: "00s · 8,203 Stars in 6 Days" },
+        headline: { zh: "10月8日建仓 → 11号 2,100 星 → 12号 4,100 星 → 14号 8,203 星", en: "Created Oct 8 → 2,100 stars Oct 11 → 4,100 Oct 12 → 8,203 stars & 586 forks Oct 14" },
+        detail: { zh: "舞台运行官方 debounce（八音盒打孔记录仪）：短短 6 天斩获 8,203 Stars 与 586 Forks。", en: "Stage runs official debounce music-box drum: in 6 days the repo hit 8,203 stars and 586 forks." },
+        metrics: { zh: ["官方 debounce 八音盒记录仪", "6 天突破 8,203 Stars", "586 Forks 席卷社区"], en: ["Official debounce drum recorder", "8,203 stars in 6 days", "586 GitHub forks"] },
+        stageCue: "STARS_DEBOUNCE",
         scriptText: {
-          zh: "开源六天，GitHub 突破八千二百星。社区不仅狂赞，还自发造出了海量惊人的机器。比如这个前端防抖函数，被做成了一个带阻尼气缸的机械绊马索。",
-          en: "8,200 stars in six days. The community not only cheered, but spontaneously built incredible machines. Like this frontend debounce mechanism with a dashpot damper."
+          zh: "社区有多买账，看数字。10月8日建的仓库，11号两千一百星，12号四千一百星，到我做这期视频的14号，八千二百星，五百八十六个fork。",
+          en: "How much did the community buy in? Look at the numbers. Repo created October 8; 2,100 stars by the 11th; 4,100 by the 12th; and by the 14th, 8,200 stars and 586 forks."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 归并分拣", en: "10s · Merge Sort" },
-        headline: { zh: "归并排序：双轨滚珠按大小自动交替咬合", en: "Merge sort: Dual-track marbles mesh alternately by size automatically" },
-        detail: { zh: "左右两条输送带分别带着有序滚珠到达交叉口，两枚机械触须实时比较尺寸，小球先落入主通道。", en: "Two feeder tracks deliver sorted marbles to an intersection; dual feelers compare sizes in real time, dropping smaller balls first." },
-        metrics: { zh: ["分治交汇机械传感器", "大小球尺寸即时分流", "O(N log N) 物理流水线"], en: ["Divide-and-conquer sensor", "Instant size-based diversion", "Physical O(N log N) pipeline"] },
-        stageCue: "MERGE_TRACK",
+        label: { zh: "10s · 全球二创引爆", en: "10s · 1.4M Views & Global Remixes" },
+        headline: { zh: "发布帖两天 140 万浏览、1.9 万收藏，多语种二创全面开花", en: "Launch post hit 1.4M views and 19K bookmarks in two days across Reddit & YouTube" },
+        detail: { zh: "舞台切入官方 merge-sort（归并排序编钟架）：X 发布帖 140 万浏览，Reddit、YouTube、西语频道全面跟进。", en: "Stage switches to official merge-sort chime rack: 1.4M views on X, 19K bookmarks, and community videos in multiple languages." },
+        metrics: { zh: ["官方 merge-sort 编钟架", "140 万浏览 / 1.9 万收藏", "多语种社区实测二创"], en: ["Official merge-sort chime rack", "1.4M views / 19K bookmarks", "Reddit, YouTube & Spanish channels"] },
+        stageCue: "VIEWS_CHIME",
         scriptText: {
-          zh: "归并排序被做成两条交错的履带，两个小球在路口碰头，机械天平一翘，小的先滑过去，大的留在原地等下一轮，读者三秒就懂了分治法。",
-          en: "Merge sort became two crossing tracks where marbles meet at a gate: the lighter rolls forward, the heavier waits — divide and conquer understood in 3 seconds."
+          zh: "Ryan那条发布帖，两天冲到一百四十万浏览，一万九千人收藏。Reddit上已经有人晒自己跑出来的图，YouTube和Instagram上的二创视频也起来了，西班牙语的频道都在做。",
+          en: "Ryan's launch post hit 1.4 million views and 19,000 bookmarks in two days. People are sharing their own builds on Reddit, remix videos are popping up on YouTube and Instagram, even on Spanish-language channels."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 梯度下降", en: "20s · Gradient Descent" },
-        headline: { zh: "小球在损失曲面凹坑滚动，学习率即重力加速度", en: "A marble rolls on a loss surface: Learning rate equals gravity acceleration" },
-        detail: { zh: "起伏的三维金属凹陷曲面就是高维损失函数，小球从山峰沿最陡峭下坡滚动，精准落入全局极小值鞍点。", en: "A contoured 3D metal bowl embodies the loss surface; a rolling marble follows the steepest descent right into the global minimum." },
-        metrics: { zh: ["三维金属抛物面曲面", "学习率重力矢量可调", "鞍点振荡与动量收敛"], en: ["3D contoured parabolic bowl", "Adjustable gravity vector", "Saddle oscillation & momentum"] },
-        stageCue: "GRADIENT_BOWL",
+        label: { zh: "20s · 作者最冷静的坦白", en: "20s · The Author's Candid Truth" },
+        headline: { zh: "Ryan 坦言：Claude 很会造，不太会看，零件数字全对样子仍可能别扭", en: "Ryan's sober note: Claude is great at building, poor at seeing — human eyes matter" },
+        detail: { zh: "舞台切入官方 gradient-descent（梯度下降等高线仪）：真正管用的修复，来自人眼盯着它跑，指出哪里别扭。", en: "Stage switches to official gradient-descent contour table: numbers can be right while the look is off; watching it run is the cure." },
+        metrics: { zh: ["官方 gradient-descent 等高线", "AI 强于建造弱于直觉审视", "人眼反馈是收敛关键"], en: ["Official gradient-descent table", "Claude builds well, sees poorly", "Watch it run & call out flaws"] },
+        stageCue: "EYE_CONTOUR",
         scriptText: {
-          zh: "甚至还有机器学习的梯度下降！做成一个带有微弱阻尼的曲面金属碗。小球在碗里滚，学习率太大就冲出碗口，学习率合适就稳稳停在碗底最低点。",
-          en: "Even machine learning gradient descent! Rendered as a damped metal bowl. Too large a learning rate jumps out; the right rate nests in the minimum."
+          zh: "冷静的声音也有，而且最冷静的来自作者自己。他写得很坦白，Claude很会造，不太会看，零件数字全对，样子还是可能不对。管用的修复，来自你盯着它跑，说出哪里别扭。",
+          en: "There are sober voices too — the most sober coming from the author himself. He admits frankly: Claude is great at building, but poor at seeing. Every number can be right while the look is still off. Real fixes come from watching it run and saying what feels awkward."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 弹性伸缩", en: "30s · Flex Grow" },
-        headline: { zh: "Flex 伸缩风琴箱：剩余空间等比例液压舒展", en: "Flex accordion: Residual space expands proportionally via hydraulic pistons" },
-        detail: { zh: "三个不同比例的金属风琴气箱并排在导轨上，总空间拉大时，连通器液压油同步推动各箱体等比充气扩张。", en: "Three proportional bellows mount on a slide rail; widening total width pumps fluid through equalizers, inflating each box proportionally." },
-        metrics: { zh: ["液压连通管等比分流", "风琴箱无损折叠舒展", "直观掌握 Flex 伸缩权重"], en: ["Hydraulic proportional split", "Accordion folding expansion", "Tactile flex factor comprehension"] },
-        stageCue: "FLEX_ACCORDION",
+        label: { zh: "30s · 黄金四步用刀法", en: "30s · The Four-Step Workflow" },
+        headline: { zh: "官方建议：第一版当草稿，上手玩，说出哪里不对，再来一轮", en: "Official advice: Treat v1 as a draft, play with it, say what's wrong, iterate" },
+        detail: { zh: "舞台切入官方 flex-grow（自适应台钳）：把第一版当草稿，亲手把玩并指出别扭之处，迭代一轮即可夹紧成型。", en: "Stage switches to official flex-grow vise: treat the first version as a draft, play with it hands-on, critique, and run one more pass." },
+        metrics: { zh: ["官方 flex-grow 精密台钳", "第一版当草稿上手玩", "指出别扭再来一轮"], en: ["Official flex-grow precision vise", "Treat v1 as a rough draft", "Play, critique, and iterate"] },
+        stageCue: "ITERATE_VISE",
         scriptText: {
-          zh: "还有 CSS 的 flex-grow，被做成了三个并排的风琴箱。外框一拉开，液压油均等注入，三个箱子按照一比二比一的比例同时扩张，极其治愈。",
-          en: "And CSS flex-grow: three accordion bellows side by side. Pull the outer frame, and hydraulic fluid inflates them in 1:2:1 proportion. Pure visual satisfaction."
+          zh: "所以官方建议，第一版当草稿，上手玩，说出哪里不对，再来一轮。",
+          en: "So the official advice is simple: treat the first version as a draft, play with it yourself, tell Claude what feels wrong, and go one more round."
         }
       }
     ]
@@ -1151,76 +1159,76 @@ export const CHAPTERS: Chapter[] = [
     stageType: "official-pkg",
     machineKey: "foundry",
     thesis: {
-      zh: "高超的美学与工程品味不再是不可名状的天赋，它被固化成了一份可分发的 AI 技能资产。",
-      en: "Exquisite taste is no longer an ineffable gift; it has been crystallized into a distributable AI skill bundle."
+      zh: "Ryan 从没亲手画过一条线 —— 他做的是看、指出不对、把教训写成规则。",
+      en: "Ryan never drew a single line by hand — he watched, pointed out flaws, and turned lessons into rules."
     },
     takeaway: {
-      zh: "品味不是玄学，是工程资产 · 57KB 技能包开启审美工业化",
-      en: "Taste is not magic, but an engineering asset · 57KB skill sparks aesthetic industrialization"
+      zh: "你的经验、品味、验收标准，都能打包成文件，让任何一个 Agent 继承",
+      en: "Your experience, taste, and quality bar can be packaged into files for any agent to inherit"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [foundry] · MOLTEN CAST IRON INDUCTION CRUCIBLE";
-        if (beat === 1) return "OFFICIAL [glass-furnace] · OPTICAL CLEAR QUARTZ FLOAT LEHR";
-        if (beat === 2) return "OFFICIAL [forge] · HEAVY HYDRAULIC DIE FORGING PRESS";
-        return "OFFICIAL [studio] · INDUSTRIAL DESIGN WORKBENCH CALIBRATION";
+        if (beat === 0) return "OFFICIAL [foundry] · 155L SKILL.md + 8 REFS + 16,000L KIT";
+        if (beat === 1) return "OFFICIAL [glass-furnace] · LESSON-BACKED RULES > BARE RULES";
+        if (beat === 2) return "OFFICIAL [forge] · SKILL AS NEW ENGINEERING ARTIFACT";
+        return "OFFICIAL [studio] · TASTE & STANDARDS INHERITED BY ANY AGENT";
       }
-      if (beat === 0) return "OFFICIAL [foundry] · 铁水浇铸中频感应坩埚";
-      if (beat === 1) return "OFFICIAL [glass-furnace] · 光学石英玻璃浮法退火炉";
-      if (beat === 2) return "OFFICIAL [forge] · 重型液压模锻机锻打工位";
-      return "OFFICIAL [studio] · 工业设计工作室基准校准台";
+      if (beat === 0) return "OFFICIAL [foundry] · 155行 SKILL.md + 8份参考文档 + 1.6万行工具包";
+      if (beat === 1) return "OFFICIAL [glass-furnace] · 从不画线的作者 · 带着教训写规则";
+      if (beat === 2) return "OFFICIAL [forge] · Skill 正在变成全新的工程制品";
+      return "OFFICIAL [studio] · 经验、品味、验收标准打包供任何 Agent 继承";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 铸铁熔炉", en: "00s · Iron Foundry" },
-        headline: { zh: "铁水浇铸坩埚：把对金属质感的极致追求固化为算法", en: "Molten crucible: Crystallizing devotion to metal luster into code" },
-        detail: { zh: "倾倒的金黄铁水在铸模中逐渐冷却变暗，凝固为沉稳厚重的哑光铸铁构件，象征着品味的锻造历程。", en: "Molten gold iron pours into sand molds, cooling into matte cast iron, symbolizing the forging of aesthetic taste." },
-        metrics: { zh: ["中频感应熔炼炉", "千度铁水流体高光", "深色漫反射物理着色"], en: ["Induction melting crucible", "1000°C liquid iron specular", "Dark matte physical shading"] },
-        stageCue: "FOUNDRY_POUR",
+        label: { zh: "00s · 审美资产三件套", en: "00s · The Three-Part Asset" },
+        headline: { zh: "155 行 SKILL.md + 8 份参考文档 + 1.6 万行绘图工具包", en: "155-line SKILL.md + 8 reference docs + a 16,000-line drawing toolkit" },
+        detail: { zh: "舞台直接运行官方 foundry（字模铸造机）：把审美与工艺固化成了可复用的工程资产。", en: "Stage runs official foundry type-caster: crystallizing taste and craftsmanship into a reusable engineering asset." },
+        metrics: { zh: ["官方 foundry 铸造机", "155 行 SKILL.md + 8 份文档", "16,000 行绘图工具包"], en: ["Official foundry type-caster", "155L SKILL.md + 8 ref docs", "16,000-line isometric toolkit"] },
+        stageCue: "FOUNDRY_1",
         scriptText: {
-          zh: "过去大家总觉得，'审美'和'品味'是玄学，只能靠极少数顶级设计师的人肉手绘。但 Anatomy 证明了：品味是可以被精确描述和打包的。",
-          en: "We used to think aesthetic taste was an ineffable talent exclusive to elite human designers. Anatomy proves taste can be codified and distributed."
+          zh: "Anatomy给我的启发，超出这些图本身。一个155行的SKILL.md，八份参考文档，一个一万六千行的绘图工具包，就把审美和工艺固化成了能复用的资产。",
+          en: "What inspires me about Anatomy goes beyond the figures themselves. A 155-line SKILL.md, eight reference docs, and a 16,000-line drawing toolkit crystallize taste and craft into a reusable asset."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 玻璃退火", en: "10s · Glass Lehr" },
-        headline: { zh: "光学石英透镜：通透反射折射，赋予数字界面呼吸感", en: "Quartz lehr: Transparent refraction gives digital interfaces room to breathe" },
-        detail: { zh: "高温浮法退火炉生产出澄澈透明的石英玻璃罩，双层菲涅尔反射折射光晕，破除单调纯色块的死板。", en: "A float lehr crafts crystal-clear quartz covers, their dual-layer Fresnel reflections banishing dead monochrome surfaces." },
-        metrics: { zh: ["光学级浮法石英玻璃", "双层菲涅尔半透反射", "数字界面的呼吸感"], en: ["Optical-grade quartz glass", "Dual-layer Fresnel reflections", "Breathing digital interface"] },
-        stageCue: "GLASS_FURNACE",
+        label: { zh: "10s · 从不画线的作者", en: "10s · Lesson-Backed Rules" },
+        headline: { zh: "Ryan 从没画过一条线：他的工作是看，说哪里不对，写成规则", en: "Ryan never drew a line: he watched, called out flaws, and wrote rules with lessons" },
+        detail: { zh: "舞台切入官方 glass-furnace（玻璃熔炉）：带着翻车教训写出来的规则，比光秃秃的口号管用，AI 下次真会守。", en: "Stage switches to official glass-furnace: rules written with the scar of a past failure work far better than bare commandments." },
+        metrics: { zh: ["官方 glass-furnace 玻璃熔炉", "作者手绘线条：0 条", "带翻车教训的规则最有效"], en: ["Official glass-furnace lehr", "0 lines hand-drawn by author", "Rules with lessons actually stick"] },
+        stageCue: "FOUNDRY_2",
         scriptText: {
-          zh: "它把什么是好看的倒角、什么是真实的铸铁漫反射、什么是通透的玻璃反光，全部写成了清晰确凿的几何与光照约束规则。",
-          en: "What makes a satisfying bevel, how cast iron reflects diffuse light, how quartz refracts photons — all formalized into geometric constraints."
+          zh: "Ryan说他从没画过一条线。他做的事是看，说哪里不对，把这句话写成规则。带着教训写出来的规则，比光秃秃的规则管用，AI下一次真的会守。",
+          en: "Ryan says he has never drawn a single line himself. His job is to look, say what's wrong, and turn that into a rule. Rules written with a lesson attached work far better than bare rules — next time, the AI actually obeys them."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 万吨重锻", en: "20s · Heavy Forge" },
-        headline: { zh: "万吨水压机锻造：去除浮夸杂质，保留纯粹工程骨架", en: "Forging press strikes: Hammering away fluff to reveal pure engineering bone" },
-        detail: { zh: "重锤千锤百炼砸击红热钢坯，剔除所有不必要的视觉装饰与花哨特效，只留下最直接、最铿锵的物理骨架。", en: "A massive die press strikes glowing billets, stripping decorative fluff to reveal uncompromising structural integrity." },
-        metrics: { zh: ["万吨级锻压冲击", "无多余装饰主义", "纯粹功能主义骨骼"], en: ["Ten-thousand-ton impact", "Zero decorative fluff", "Pure functionalist skeleton"] },
-        stageCue: "FORGE_HAMMER",
+        label: { zh: "20s · 新型工程制品", en: "20s · Skills as Engineering Artifacts" },
+        headline: { zh: "Skill 正在变成 AI 时代全新的核心工程制品", en: "Skills are becoming a brand-new class of software engineering artifact" },
+        detail: { zh: "舞台切入官方 forge（锻造冲压台）：把人类的审美判断与质量护栏锻造成标准化的 Skill 制品。", en: "Stage switches to official forge press: forging human judgment and quality guardrails into standardized skill bundles." },
+        metrics: { zh: ["官方 forge 锻造冲压台", "Skill = 新型工程制品", "元能力与护栏标准化"], en: ["Official forge hydraulic press", "Skill = new engineering artifact", "Standardized craft & guardrails"] },
+        stageCue: "FOUNDRY_3",
         scriptText: {
-          zh: "这份只有五十七 KB 的文件，就像万吨水压机的一记重锤，把所有花里胡哨、不接地气的无用修饰全部砸碎，只留下最硬核的工程骨架。",
-          en: "This 57KB file hits like a 10,000-ton hydraulic forging press, smashing decorative noise to expose raw functional skeletal power."
+          zh: "这指向一个更大的事，skill正在变成新的工程制品。",
+          en: "This points to something much bigger: skills are becoming a brand-new kind of engineering artifact."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 资产分发", en: "30s · Skill Packaging" },
-        headline: { zh: "一份 57KB 文件，让全世界开发者即刻拥有大师级品味", en: "A 57KB file endows developers worldwide with master-class craftsmanship" },
-        detail: { zh: "任何普通工程师只需将该技能加载入 Claude，就能秒级产出足以入驻现代艺术馆的高精度交互工程仪器。", en: "Any developer loading this skill into Claude instantly commands the craftsmanship to yield museum-worthy interactive machinery." },
-        metrics: { zh: ["57KB 超轻量资产分发", "一人顶一个专业设计团队", "开启工程美学普及化"], en: ["57KB ultra-light distribution", "One person equals a design studio", "Democratizes engineering aesthetics"] },
-        stageCue: "STUDIO_EXPORT",
+        label: { zh: "30s · 让Agent继承品味", en: "30s · Inheriting Human Taste" },
+        headline: { zh: "你的经验、品味、验收标准，都能打包成文件让任何 Agent 继承", en: "Package your experience, taste, and acceptance bar for any agent to inherit" },
+        detail: { zh: "舞台切入官方 studio（精密摄影棚）：无论哪个 Agent 加载这份文件，都能直接继承你的品味与标准。", en: "Stage switches to official studio lighting rig: any coding agent loading your skill file inherits your taste and standards." },
+        metrics: { zh: ["官方 studio 精密摄影棚", "打包经验与审美品味", "让任何 Agent 直接继承"], en: ["Official studio lighting bench", "Package experience & taste", "Inherited by any AI agent"] },
+        stageCue: "FOUNDRY_4",
         scriptText: {
-          zh: "从此，品味不再是少数人的特权。你只要把它装进 Claude，你写出来的每一个网页、每一份技术说明，都拥有了世界顶级工业设计的灵魂。",
-          en: "Taste is no longer an elite privilege. Install it into Claude, and every doc and UI you build inherits the soul of world-class industrial design."
+          zh: "你的经验、品味、验收标准，都能打包成文件，让任何一个agent继承。",
+          en: "Your experience, your aesthetic taste, and your acceptance standards can all be packaged into files for any agent to inherit."
         }
       }
     ]
@@ -1230,81 +1238,81 @@ export const CHAPTERS: Chapter[] = [
     index: 14,
     number: "15",
     title: { zh: "接下来看什么", en: "What to Watch Next" },
-    subtitle: { zh: "OFFICIAL FIGURES: PUBLIC-KEY · SEASONS · PLASMA-CUTTER · TOKAMAK", en: "Official Figures: Public Key · Seasons · Plasma Cutter · Tokamak" },
+    subtitle: { zh: "OFFICIAL FIGURES: PUBLIC-KEY · TURNING-DIAL (3D) · PLASMA-CUTTER · TOKAMAK", en: "Official Figures: Public Key · Turning Dial (3D) · Plasma Cutter · Tokamak" },
     duration: 40,
     stageType: "official-pkg",
     machineKey: "public-key",
     thesis: {
-      zh: "Anatomy 只是第一步：当 AI 真正掌握物理世界的机械语法，人机协作的疆界将被彻底改写。",
-      en: "Anatomy is merely step one: When AI commands the grammar of the physical world, human-machine symbiosis is rewritten."
+      zh: "一行字，一台机器 —— 技术文档、落地页与 AI 技能的下一站已经开启。",
+      en: "One prompt, one machine — the next frontier for technical docs, landing pages, and AI skills has begun."
     },
     takeaway: {
-      zh: "从公钥密码到可控聚变 · 探索人机共生创作的星辰大海",
-      en: "From public-key ciphers to fusion reactors · Exploring uncharted frontiers of AI creation"
+      zh: "评论区留下你最想讲清的概念 · 点赞过千下期实测 · 欢迎一键三连",
+      en: "Drop a concept you want explained in the comments · 1,000 likes and we test it live"
     },
     readout: (_t, beat, lang = "zh") => {
       if (lang === "en") {
-        if (beat === 0) return "OFFICIAL [public-key] · ASYMMETRIC CIPHER MECHANICAL PADLOCK";
-        if (beat === 1) return "OFFICIAL [seasons] · ORBITAL LONG-TERM CHRONOMETER";
-        if (beat === 2) return "OFFICIAL [plasma-cutter] · CNC TORCH METAL SPARKS CUTTING";
-        return "OFFICIAL [tokamak] · MAGNETIC CONFINEMENT FUSION TORUS";
+        if (beat === 0) return "TREND 01 · OFFICIAL [public-key] · npm i anatomy-figures (33 REACT COMPONENTS)";
+        if (beat === 1) return "TREND 02 · OFFICIAL [turning-dial] · 3D BETA · 380-PART HAND @ 20 FPS";
+        if (beat === 2) return "TREND 03 · OFFICIAL [plasma-cutter] · MODEL-DRIVEN EVERYTHING";
+        return "OFFICIAL [tokamak] · ONE PROMPT, ONE MACHINE · SEE YOU NEXT TIME";
       }
-      if (beat === 0) return "OFFICIAL [public-key] · 非对称密码机械密码锁套件";
-      if (beat === 1) return "OFFICIAL [seasons] · 轨道长期天象历法日晷";
-      if (beat === 2) return "OFFICIAL [plasma-cutter] · 数控等离子弧板材火花切割";
-      return "OFFICIAL [tokamak] · 磁约束托卡马克可控核聚变环";
+      if (beat === 0) return "趋势 01 · OFFICIAL [public-key] · anatomy-figures npm包 33台机器一行 import";
+      if (beat === 1) return "趋势 02 · OFFICIAL [turning-dial] · 3D 模式 Beta · 380零件测试手 20 FPS";
+      if (beat === 2) return "趋势 03 · OFFICIAL [plasma-cutter] · 模型驱动一切渗入更多 Skill";
+      return "OFFICIAL [tokamak] · 一行字，一台机器 · 评论区见！";
     },
     beats: [
       {
         start: 0,
         end: 10,
-        label: { zh: "00s · 非对称锁", en: "00s · Asymmetric Lock" },
-        headline: { zh: "公钥与私钥：双槽机械锁具的物理单向陷门", en: "Public & private keys: Dual-chamber lock embodying mathematical one-way trapdoors" },
-        detail: { zh: "公钥是任何人都能按下的自锁簧片，私钥则是唯一能拨动内部隐藏滑块反向复位的精密齿形钥匙。", en: "The public key is an open-access spring latch; the private key is the unique bitted tool capable of resetting internal tumblers." },
-        metrics: { zh: ["单向自锁机械弹簧", "私钥精密钥匙逆向解锁", "单向陷门函数物理化"], en: ["One-way spring latch", "Precision private key release", "Physical one-way trapdoor"] },
-        stageCue: "PUBLIC_KEY_LOCK",
+        label: { zh: "00s · 趋势一：进军生产文档", en: "00s · Trend 1: Production Docs" },
+        headline: { zh: "anatomy-figures npm 包已把 33 台机器封装为 React 组件", en: "The anatomy-figures npm package wraps all 33 machines as React components" },
+        detail: { zh: "舞台运行官方 public-key（公钥双芯锁）：正是本次视频直接调用的 anatomy-figures 包，一行 import 即可用。", en: "Stage runs official public-key dual-cylinder lock: import any of the 33 figures into docs or landing pages in one line." },
+        metrics: { zh: ["官方 public-key 锁具机", "npm: anatomy-figures", "33 台机器一行 import"], en: ["Official public-key lock", "npm: anatomy-figures", "33 machines in 1 import line"] },
+        stageCue: "NEXT_REACT",
         scriptText: {
-          zh: "未来我们还能用它造什么？看，这是非对称加密。公钥是一把任何人都能按下的防盗按扣，私钥则是世界上唯一能对准弹子开锁的齿形钥匙。",
-          en: "What else can we build? Behold asymmetric cryptography. The public key is an open snap-lock; the private key is the only key shaped to reset it."
+          zh: "后面可以盯三件事。第一件，这种插图会开始出现在技术文档和落地页里，anatomy-figures这个npm包已经把33台机器做成了React组件，一行import就能用。",
+          en: "Watch for three things next. First, these figures will start appearing in technical docs and landing pages — the anatomy-figures npm package already wraps all 33 machines into React components ready in a single import."
         }
       },
       {
         start: 10,
         end: 20,
-        label: { zh: "10s · 宇宙时计", en: "10s · Cosmic Clock" },
-        headline: { zh: "万年历日晷：在宇宙尺度下度量知识与文明的沉淀", en: "Millennial solar clock: Measuring the endurance of knowledge and civilization" },
-        detail: { zh: "黄铜刻度盘随黄道倾角永恒运转，光影交错间记录着人类文明从结绳记事到硅基智能的跨越式跃迁。", en: "A brass dial tracks the ecliptic, its evolving shadow chronicling humanity's journey from stone marks to silicon intelligence." },
-        metrics: { zh: ["黄铜精雕日晷刻度", "地轴黄道长期运转", "文明知识跨尺度沉淀"], en: ["Brass engraved solar dial", "Long-term axial precession", "Civilization scale knowledge"] },
-        stageCue: "SEASONS_COSMIC",
+        label: { zh: "10s · 趋势二：3D模式突破", en: "10s · Trend 2: 3D Mode Beta" },
+        headline: { zh: "3D 模式尚处 Beta：380 零件测试手目前 20 帧，成熟后天花板再抬一截", en: "3D mode is still in beta: a 380-part test hand runs at 20 FPS, raising the ceiling" },
+        detail: { zh: "舞台切入官方 turning-dial（3D 机械手与密码转盘）：90 个金属零件在真实 3D 纵深中旋转重投影。", en: "Stage switches to official turning-dial (3D mechanical hand & dial): once 3D matures, the ceiling lifts another notch." },
+        metrics: { zh: ["官方 turning-dial 3D 机械手", "380 零件测试手 @ 20 FPS", "3D 成熟后上限再抬一截"], en: ["Official turning-dial 3D hand", "380-part test hand @ 20 FPS", "3D beta raising the ceiling"] },
+        stageCue: "NEXT_3D_HAND",
         scriptText: {
-          zh: "甚至是对宇宙尺度的探索。这台万年历日晷，把天体运行规律与数千年的文明知识，凝聚在一块缓缓旋转的黄铜指针上。",
-          en: "Even cosmic frontiers: This millennial sundial fuses orbital celestial mechanics with human history onto a slowly turning brass dial."
+          zh: "第二件，3D模式还是beta，一个三百八十零件的测试手只跑到20帧，这块成熟了，天花板再抬一截。",
+          en: "Second, 3D mode is still in beta — a 380-part test hand currently runs at 20 frames per second. Once that matures, the ceiling rises another notch."
         }
       },
       {
         start: 20,
         end: 30,
-        label: { zh: "20s · 火花切割", en: "20s · Plasma Cutting" },
-        headline: { zh: "等离子弧火花四射：数字指令直接击穿现实壁垒", en: "Plasma arc sparks fly: Digital commands piercing physical barriers" },
-        detail: { zh: "高能等离子火炬沿钢板边缘高速切削，飞溅的耀眼火花象征着由纯代码生成的指令正以前所未有的速度熔断现实与虚拟的隔阂。", en: "A high-energy plasma torch cuts steel plate, its sparks symbolizing pure code shattering the barriers between virtual and real." },
-        metrics: { zh: ["两万度等离子电弧", "火花飞溅粒子系统", "虚拟走向现实的隐喻"], en: ["20,000°C plasma arc", "Sparks dynamic particle effect", "Virtual-to-real metaphor"] },
-        stageCue: "PLASMA_CUT",
+        label: { zh: "20s · 趋势三：模型驱动一切", en: "20s · Trend 3: Model-Driven Skills" },
+        headline: { zh: "“底层数学模型驱动一切”的做法，会加速渗进更多领域 Skill", en: "The 'model-drives-everything' approach will spread into many more skills" },
+        detail: { zh: "舞台切入官方 plasma-cutter（WebGL 等离子切割机）：数学模型驱动几何、读数与着色器的范式将重塑更多 Skill。", en: "Stage switches to official plasma-cutter: one line of text, one working machine — simple as that." },
+        metrics: { zh: ["官方 plasma-cutter 等离子机", "数学模型驱动一切", "渗入更多工程级 Skill"], en: ["Official plasma-cutter torch", "Model-driven architecture", "One prompt, one machine"] },
+        stageCue: "NEXT_PLASMA",
         scriptText: {
-          zh: "等离子切割机的割枪划过钢板，两万度的高温弧光火花四溅。代码不再局限于屏幕像素，它正在直接穿透并重塑现实世界的物质形态。",
-          en: "The plasma torch cuts steel, 20,000-degree arcs sending sparks flying. Code is no longer pixels; it slices through physical boundaries."
+          zh: "第三件，模型驱动一切这套做法，会渗进更多skill。一行字，一台机器，就这么简单。",
+          en: "Third, this model-drives-everything approach will spread into many more skills. One line of text, one working machine — it's that simple."
         }
       },
       {
         start: 30,
         end: 40,
-        label: { zh: "30s · 终极托卡马克", en: "30s · Fusion Tokamak" },
-        headline: { zh: "托卡马克人造太阳：人机协作奔向无限可能的终点", en: "Tokamak artificial sun: Human-AI synergy racing toward boundless horizons" },
-        detail: { zh: "环形强磁场紧紧束缚着上亿度发光的超高温等离子体环，正如人类智慧与大模型智能在紧密啮合中点燃未来的无限潜能。", en: "Toroidal magnets confine 100-million-degree plasma rings: human and artificial intelligence igniting boundless potential." },
-        metrics: { zh: ["托卡马克环形磁笼", "亿度等离子体螺旋自旋", "人机共创新纪元起点"], en: ["Tokamak magnetic torus", "100M-degree spinning plasma", "Dawn of human-AI synergy"] },
-        stageCue: "TOKAMAK_FUSION",
+        label: { zh: "30s · 互动召唤：下期实测", en: "30s · Call to Action" },
+        headline: { zh: "你手里有没有一直想讲清、始终画不明白的概念？评论区见！", en: "Have a concept you've always wanted to explain clearly? Drop it in the comments!" },
+        detail: { zh: "舞台切入官方终极巨作 tokamak（托卡马克核聚变装置）：评论区留下你想看的概念，点赞过千下期实测，欢迎一键三连！", en: "Stage switches to official tokamak fusion torus: leave your concept in the comments — 1,000 likes and we test it live!" },
+        metrics: { zh: ["官方 tokamak 核聚变反应堆", "评论区征集实测概念", "点赞过 1,000 下期安排"], en: ["Official tokamak fusion reactor", "Comment your hardest concept", "1,000+ likes = live test"] },
+        stageCue: "NEXT_TOKAMAK",
         scriptText: {
-          zh: "最后一台机器：磁约束托卡马克可控核聚变装置。环形磁场束缚着一亿度的人造太阳。这是一场刚刚开始的革命。带上 Anatomy，去创造属于你的机器吧！",
-          en: "The final machine: a magnetic confinement Tokamak fusion reactor holding an artificial sun. This revolution has just begun. Go build your own machines!"
+          zh: "你手里有没有一个一直想讲清、始终画不明白的概念？评论区告诉我，点赞过一千，我拿来实测。觉得有收获，一键三连，我们下期见。",
+          en: "Do you have a concept you've always wanted to explain clearly but could never draw right? Tell me in the comments — if it hits a thousand likes, I'll put it to the test. See you next time!"
         }
       }
     ]
@@ -1318,11 +1326,11 @@ export function getChapterState(
 ): ChapterState {
   let ch: Chapter | undefined;
   if (typeof chIndexOrId === "number") {
-    ch = CHAPTERS[Math.max(0, Math.min(CHAPTERS.length - 1, chIndexOrId))];
+    ch = CHAPTERS[Math.max(0, Math.min(CHAPTERS.length - 1, Math.floor(chIndexOrId)))];
   } else {
     ch = CHAPTERS.find((c) => c.id === chIndexOrId) || CHAPTERS[0];
   }
-  const clamped = Math.max(0, Math.min(ch.duration - 0.001, tSec));
+  const clamped = Math.max(0, Math.min(ch.duration - 0.001, Number.isFinite(tSec) ? tSec : 0));
   const beatIndex = getBeatIndex(clamped);
   const activeBeat = ch.beats[beatIndex] || ch.beats[0];
   const beatSpan = Math.max(0.001, activeBeat.end - activeBeat.start);

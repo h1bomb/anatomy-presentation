@@ -114,31 +114,135 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
     };
   }, [theme]);
 
-  // Synchronize dynamic stage cues to iframe if applicable
+  // Synchronize dynamic stage cues to mounted figure or iframe
   useEffect(() => {
+    // 1. Drive official <Watch /> figure in Chapter 01 (Winding, 1/20x Slow-Mo, Exploded Bridges)
+    if (!isIframe && figureKey === "watch" && mountRef.current) {
+      const fireWatchKey = (key: string, shiftKey = false) => {
+        const stageEl = mountRef.current?.querySelector(".iso-stage") as HTMLElement | null;
+        if (!stageEl) return false;
+        stageEl.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key,
+            code: key === "Escape" ? "Escape" : `Key${key.toUpperCase()}`,
+            shiftKey,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+        return true;
+      };
+
+      const cue = activeBeat.stageCue;
+      if (cue !== lastCueKey.current) {
+        const applyCue = () => {
+          if (!fireWatchKey("Escape")) return false;
+          if (cue === "WATCH_WIND") {
+            fireWatchKey("w", true);
+          } else if (cue === "WATCH_SLOW") {
+            fireWatchKey("s");
+          } else if (cue === "WATCH_APART") {
+            fireWatchKey("e");
+          }
+          lastCueKey.current = cue;
+          return true;
+        };
+
+        if (!applyCue()) {
+          const timer = window.setTimeout(applyCue, 180);
+          return () => window.clearTimeout(timer);
+        }
+      }
+
+      // Continue winding crown periodically during WATCH_WIND beat
+      if (cue === "WATCH_WIND") {
+        const windInterval = window.setInterval(() => {
+          fireWatchKey("w", true);
+        }, 1400);
+        return () => window.clearInterval(windInterval);
+      }
+      return;
+    }
+
+    // 2. Drive embedded official iframe figures (raptor-engine.html, turning-dial.html)
     if (!isIframe || !iframeRef.current) return;
     const iframe = iframeRef.current;
-    const curCue = `${figureKey}:${activeBeat.stageCue}:${Math.floor(clampedTime)}`;
-    if (curCue !== lastCueKey.current) {
-      lastCueKey.current = curCue;
+
+    const applyIframeCue = () => {
       try {
-        iframe.contentWindow?.postMessage(
-          {
-            type: "ANATOMY_CUE",
-            figureKey,
-            stageCue: activeBeat.stageCue,
-            clampedTime,
-            beatProgress,
-            dtMs,
-            isExportMode,
-          },
-          "*"
-        );
+        const doc = iframe.contentDocument;
+        const win = iframe.contentWindow as any;
+        if (!doc || !win) return;
+
+        // Sync theme to iframe
+        if (doc.body) {
+          doc.body.setAttribute("data-theme", theme);
+          const paperBg = theme === "light" ? "#f5f4ef" : "#111110";
+          doc.documentElement.style.setProperty("--anatomy-paper", paperBg);
+          doc.documentElement.style.setProperty("--anatomy-card", paperBg);
+        }
+
+        if (isExportMode && typeof win.__brollDrive === "function") {
+          win.__brollDrive(activeBeat.stageCue, clampedTime, beatProgress, dtMs);
+          return;
+        }
+
+        const stage = doc.querySelector(".rp-stage, .td-stage, .iso-plate") as HTMLElement | null;
+        if (!stage) return;
+
+        const firePtr = (type: string, fx: number, fy: number) => {
+          const rect = stage.getBoundingClientRect();
+          if (rect.width === 0) return;
+          stage.dispatchEvent(
+            new PointerEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              pointerId: 1,
+              isPrimary: true,
+              clientX: rect.left + rect.width * fx,
+              clientY: rect.top + rect.height * fy,
+              buttons: type === "pointerup" ? 0 : 1,
+            })
+          );
+        };
+
+        if (activeBeat.stageCue === "RAPTOR_EXPLODE") {
+          const shutdownBtn = doc.querySelector("[data-fire]") as HTMLElement | null;
+          const aria = stage.getAttribute("aria-valuetext") || "";
+          if (aria.includes("firing") && shutdownBtn) {
+            shutdownBtn.click();
+          }
+          firePtr("pointerenter", 0.5, 0.45);
+          firePtr("pointermove", 0.48 + Math.sin(clampedTime) * 0.06, 0.45);
+        } else if (activeBeat.stageCue === "RAPTOR_IGNITE") {
+          firePtr("pointerleave", 0.05, 0.05);
+          const aria = stage.getAttribute("aria-valuetext") || "";
+          if (!aria.includes("firing")) {
+            const btn = doc.querySelector("[data-fire]") as HTMLElement | null;
+            if (btn) {
+              btn.click();
+            } else {
+              stage.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "i", code: "KeyI", bubbles: true, cancelable: true })
+              );
+            }
+          }
+        }
       } catch {
         // Cross-origin safety
       }
+    };
+
+    const curCue = `${figureKey}:${activeBeat.stageCue}:${theme}:${Math.floor(clampedTime)}`;
+    if (curCue !== lastCueKey.current) {
+      lastCueKey.current = curCue;
+      applyIframeCue();
     }
-  }, [figureKey, activeBeat.stageCue, clampedTime, beatProgress, dtMs, isIframe, isExportMode]);
+
+    const onLoad = () => applyIframeCue();
+    iframe.addEventListener("load", onLoad);
+    return () => iframe.removeEventListener("load", onLoad);
+  }, [figureKey, activeBeat.stageCue, clampedTime, beatProgress, dtMs, isIframe, isExportMode, theme]);
 
   const metricsText = tList(activeBeat.metrics, lang).join(" · ");
   const subtitleText = t(chapter.subtitle, lang);

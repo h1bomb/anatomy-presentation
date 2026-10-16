@@ -41,7 +41,7 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function synthesizeText(text: string, maxRetries = 3): Promise<Buffer> {
+async function synthesizeText(text: string, maxRetries = 10): Promise<Buffer> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const resp = await fetch(API_URL, {
@@ -77,10 +77,11 @@ async function synthesizeText(text: string, maxRetries = 3): Promise<Buffer> {
       if (json.base_resp && json.base_resp.status_code !== 0) {
         const code = json.base_resp.status_code;
         const msg = json.base_resp.status_msg;
-        // Rate limiting or transient throttle
+        // Rate limiting or transient throttle (RPM window is 60s)
         if (code === 1002 || code === 1039) {
-          console.warn(`[Throttle ${code}] ${msg}, backing off... attempt ${attempt}/${maxRetries}`);
-          await sleep(2500 * attempt);
+          const waitMs = Math.min(25000, 5000 * attempt);
+          console.warn(`[Throttle ${code}] ${msg}, waiting ${(waitMs / 1000).toFixed(0)}s... attempt ${attempt}/${maxRetries}`);
+          await sleep(waitMs);
           continue;
         }
         throw new Error(`MiniMax error [${code}]: ${msg}`);
@@ -94,7 +95,7 @@ async function synthesizeText(text: string, maxRetries = 3): Promise<Buffer> {
     } catch (err: any) {
       if (attempt < maxRetries) {
         console.warn(`[Retry ${attempt}/${maxRetries}] ${err.message}`);
-        await sleep(2000 * attempt);
+        await sleep(3000 * attempt);
       } else {
         throw err;
       }
@@ -111,13 +112,18 @@ async function convertMp3ToM4a(mp3Path: string, m4aPath: string): Promise<void> 
 }
 
 async function processQueue(languages: Language[] = ["zh", "en"]): Promise<void> {
+  const concurrency = Math.max(1, Number(process.env.MINIMAX_CONCURRENCY || 1));
+  const skipRecentMinutes = Number(process.env.SKIP_RECENT_MINUTES || 0);
+  const recentCutoffMs = skipRecentMinutes > 0 ? Date.now() - skipRecentMinutes * 60 * 1000 : 0;
+
   console.log(`\n======================================================`);
   console.log(`MiniMax T2A Batch Audio Generator`);
-  console.log(`Endpoint: ${API_URL}`);
-  console.log(`Model:    ${MODEL}`);
-  console.log(`Voice ID: ${VOICE_ID}`);
-  console.log(`Target:   ${PUBLIC_AUDIO_DIR}`);
-  console.log(`Langs:    ${languages.join(", ")}`);
+  console.log(`Endpoint:    ${API_URL}`);
+  console.log(`Model:       ${MODEL}`);
+  console.log(`Voice ID:    [CONFIGURED VIA ENV]`);
+  console.log(`Concurrency: ${concurrency}`);
+  console.log(`Target:      ${PUBLIC_AUDIO_DIR}`);
+  console.log(`Langs:       ${languages.join(", ")}`);
   console.log(`======================================================\n`);
 
   for (const lang of languages) {
@@ -127,6 +133,7 @@ async function processQueue(languages: Language[] = ["zh", "en"]): Promise<void>
     }
 
     const tasks: Array<{
+      index: number;
       chapterId: string;
       beatIndex: number;
       text: string;
@@ -134,13 +141,16 @@ async function processQueue(languages: Language[] = ["zh", "en"]): Promise<void>
       m4aPath: string;
     }> = [];
 
+    let idx = 0;
     for (const ch of CHAPTERS) {
       ch.beats.forEach((b, beatIndex) => {
         const text = t(b.scriptText, lang);
         if (text && text.trim()) {
+          idx++;
           const mp3Path = path.join(langDir, `${ch.id}_${beatIndex}.mp3`);
           const m4aPath = path.join(langDir, `${ch.id}_${beatIndex}.m4a`);
           tasks.push({
+            index: idx,
             chapterId: ch.id,
             beatIndex,
             text,
@@ -153,32 +163,47 @@ async function processQueue(languages: Language[] = ["zh", "en"]): Promise<void>
 
     console.log(`\nProcessing language: [${lang.toUpperCase()}] (${tasks.length} audio tracks)...`);
 
-    let done = 0;
-    for (const task of tasks) {
-      done++;
-      const prefix = `[${done}/${tasks.length}] [${lang}] ${task.chapterId}_${task.beatIndex}`;
-      process.stdout.write(`${prefix}: Synthesizing... `);
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < tasks.length) {
+        const currentIdx = cursor++;
+        const task = tasks[currentIdx];
+        if (!task) break;
 
-      const start = Date.now();
-      try {
-        const mp3Buffer = await synthesizeText(task.text);
-        fs.writeFileSync(task.mp3Path, mp3Buffer);
+        const prefix = `[${task.index}/${tasks.length}] [${lang}] ${task.chapterId}_${task.beatIndex}`;
 
-        // Convert to AAC m4a for maximum browser & legacy compatibility
-        await convertMp3ToM4a(task.mp3Path, task.m4aPath);
+        if (recentCutoffMs > 0 && fs.existsSync(task.mp3Path) && fs.existsSync(task.m4aPath)) {
+          const stat = fs.statSync(task.m4aPath);
+          if (stat.size > 1024 && stat.mtimeMs >= recentCutoffMs) {
+            console.log(`${prefix}: SKIP (already synthesized in current session)`);
+            continue;
+          }
+        }
 
-        const m4aStat = fs.statSync(task.m4aPath);
-        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-        const sizeKb = (m4aStat.size / 1024).toFixed(0);
+        const start = Date.now();
+        try {
+          const mp3Buffer = await synthesizeText(task.text);
+          fs.writeFileSync(task.mp3Path, mp3Buffer);
 
-        console.log(`DONE in ${elapsed}s (${sizeKb} KB)`);
-      } catch (err: any) {
-        console.error(`FAILED: ${err.message}`);
+          // Convert to AAC m4a for maximum browser & legacy compatibility
+          await convertMp3ToM4a(task.mp3Path, task.m4aPath);
+
+          const m4aStat = fs.statSync(task.m4aPath);
+          const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+          const sizeKb = (m4aStat.size / 1024).toFixed(0);
+
+          console.log(`${prefix}: DONE in ${elapsed}s (${sizeKb} KB)`);
+        } catch (err: any) {
+          console.error(`${prefix}: FAILED: ${err.message}`);
+          throw err;
+        }
+
+        // Pacing for ~20 RPM limit on speech-2.8-hd
+        await sleep(1800);
       }
+    };
 
-      // Pacing to stay comfortably under API rate limits
-      await sleep(650);
-    }
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
   }
 
   console.log("\nAll requested voice syntheses completed successfully!");
