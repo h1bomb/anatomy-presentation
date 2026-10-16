@@ -289,13 +289,13 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
             title={iframeAsset}
           />
         ) : (
-          <div ref={mountRef} className="official-pkg-mount" style={{ width: "920px", margin: "0 auto" }}>
+          <div ref={mountRef} className="official-pkg-mount" style={{ width: "100%", maxWidth: "920px", margin: "0 auto" }}>
             {FigureComp ? (
               <Suspense fallback={<StageSkeleton label={`MOUNTING [${figureKey.toUpperCase()}]...`} />}>
                 <FigureComp
                   theme={theme}
                   tokens={figureTokens}
-                  style={{ width: "920px", maxWidth: "920px", margin: "0 auto", display: "block" }}
+                  style={{ width: "100%", maxWidth: "920px", margin: "0 auto", display: "block" }}
                 />
               </Suspense>
             ) : (
@@ -305,14 +305,15 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
         )}
       </div>
 
-      {/* Centered Floating Playback Bar (Visible on Hover over Stage) */}
+      {/* Centered Floating Playback Bar (Visible on Hover over Stage, Always Visible on Mobile/Touch) */}
       {!isExportMode && onTogglePlay && (
         <TooltipProvider delayDuration={120}>
           <div
             className={cn(
               "stage-hover-playback-bar",
-              "absolute bottom-6 left-1/2 -translate-x-1/2 z-30",
+              "absolute bottom-6 max-lg:bottom-2.5 left-1/2 -translate-x-1/2 z-30",
               "transition-all duration-300 ease-out",
+              "max-lg:opacity-100 max-lg:translate-y-0 max-lg:pointer-events-auto",
               isHovered
                 ? "opacity-100 translate-y-0 pointer-events-auto"
                 : "opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"

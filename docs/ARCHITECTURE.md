@@ -111,13 +111,20 @@ Instead of relying on a rigid 10-second wall-clock timer when voiceover is activ
 
 ---
 
-## 4. Full-Bleed Edge-to-Edge Viewport Scaling
+## 4. Full-Bleed Desktop & Mobile-First Responsive Layout
 
-To fill $100\%$ of any display (`16:9`, `16:10` MacBook, or `21:9` ultrawide) without letterbox bars while preserving broadcast proportions:
-- [`src/App.tsx`](../src/App.tsx) computes:
-  $$\text{scale} = \min\left(\frac{W_{\text{avail}}}{1920}, \frac{H_{\text{avail}}}{1080}\right), \quad W_{\text{stage}} = \frac{W_{\text{avail}}}{\text{scale}}, \quad H_{\text{stage}} = \frac{H_{\text{avail}}}{\text{scale}}$$
-- `.broll-viewport` uses `width: var(--stage-w); height: var(--stage-h); transform: translate(-50%, -50%) scale(var(--stage-scale));`, resulting in an exact $W_{\text{avail}} \times H_{\text{avail}}$ full-bleed canvas.
-- When `?export=1` is present in the URL, $W_{\text{stage}}$ and $H_{\text{stage}}$ lock strictly to `1920px × 1080px`.
+The presentation automatically adapts between large-screen broadcast mode and mobile/tablet vertical reading mode:
+- **Desktop Broadcast Mode (`> 1024px`)**:
+  - [`src/App.tsx`](../src/App.tsx) computes:
+    $$\text{scale} = \min\left(\frac{W_{\text{avail}}}{1920}, \frac{H_{\text{avail}}}{1080}\right), \quad W_{\text{stage}} = \frac{W_{\text{avail}}}{\text{scale}}, \quad H_{\text{stage}} = \frac{H_{\text{avail}}}{\text{scale}}$$
+  - `.broll-viewport` uses `width: var(--stage-w); height: var(--stage-h); transform: translate(-50%, -50%) scale(var(--stage-scale));`, resulting in an exact $W_{\text{avail}} \times H_{\text{avail}}$ full-bleed canvas across `16:9`, `16:10`, and `21:9` displays.
+- **Mobile & Tablet Responsive Mode (`<= 1024px`, `data-mobile="true"`)**:
+  - Automatically switches `.broll-viewport` to a native vertical flex layout (`100dvh` scrollable container) with `1:1` crisp typography:
+    1. **Sticky Top Header**: Compact title, 6 icon-only toolbar buttons, and a full-width 4-beat progress bar.
+    2. **Interactive Stage First**: Places the isometric diagram stage immediately below the header at full viewport width, with the bottom-centered Prev / Play-Pause / Next pill always visible for touch ergonomics.
+    3. **Single-Column Beat Cards**: Stacks the Core Thesis banner, 4 tappable Beat Cards, and Key Takeaway plate vertically below the stage.
+    4. **Fixed Bottom Teleprompter**: Pins the karaoke subtitle bar to the bottom of the screen with 2-line wrapping.
+- **Headless Export Mode (`?export=1`)**: Locks $W_{\text{stage}}$ and $H_{\text{stage}}$ strictly to `1920px × 1080px`.
 
 ---
 

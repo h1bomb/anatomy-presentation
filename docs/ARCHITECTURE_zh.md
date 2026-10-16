@@ -111,13 +111,20 @@
 
 ---
 
-## 4. 全屏无留白视口自适应系统
+## 4. 全屏无留白桌面视口与移动端自适应系统
 
-为了在 `16:9` 显示器、`16:10` MacBook 笔记本或 `21:9` 带鱼屏上实现 100% 铺满整屏且无任何黑边/灰边留白：
-- [`src/App.tsx`](../src/App.tsx) 动态计算缩放因子与逻辑画布尺寸：
-  $$\text{scale} = \min\left(\frac{W_{\text{可用}}}{1920}, \frac{H_{\text{可用}}}{1080}\right), \quad W_{\text{stage}} = \frac{W_{\text{可用}}}{\text{scale}}, \quad H_{\text{stage}} = \frac{H_{\text{可用}}}{\text{scale}}$$
-- `.broll-viewport` 使用 `width: var(--stage-w); height: var(--stage-h); transform: translate(-50%, -50%) scale(var(--stage-scale));`，经过矩阵缩放后严格等于 $W_{\text{可用}} \times H_{\text{可用}}$（即 `100vw × 100vh`）。
-- 当 URL 包含 `?export=1` 参数时，画布自动锁定为标准 `1920px × 1080px` 广播级分辨率。
+系统根据视口宽度在“桌面端广播级双栏画布”与“移动端/平板端原生纵向流式布局”之间自动无缝切换：
+- **桌面端全屏无留白模式（`> 1024px`）**：
+  - [`src/App.tsx`](../src/App.tsx) 动态计算缩放因子与逻辑画布尺寸：
+    $$\text{scale} = \min\left(\frac{W_{\text{可用}}}{1920}, \frac{H_{\text{可用}}}{1080}\right), \quad W_{\text{stage}} = \frac{W_{\text{可用}}}{\text{scale}}, \quad H_{\text{stage}} = \frac{H_{\text{可用}}}{\text{scale}}$$
+  - `.broll-viewport` 使用 `width: var(--stage-w); height: var(--stage-h); transform: translate(-50%, -50%) scale(var(--stage-scale));`，经过矩阵缩放后严格等于 $W_{\text{可用}} \times H_{\text{可用}}$（`100vw × 100vh`），在 `16:9`、`16:10` 及带鱼屏上均无黑边或灰边。
+- **移动端与平板响应式模式（`<= 1024px`，`data-mobile="true"`）**：
+  - 自动解除矩阵缩放，将 `.broll-viewport` 切换为 `100dvh` 原生纵向流式滚动容器，保证移动端字号清晰可读：
+    1. **吸顶紧凑导航栏**：顶部展示标题、6 个图标按钮及占满全宽的 4 分镜时间轴进度条。
+    2. **交互式舞台置顶**：等轴测图形舞台紧贴导航栏下方全宽展示，底部居中的“上一页 / 播放暂停 / 下一页”胶囊条在触屏设备上默认常驻可见。
+    3. **单列分镜卡片流**：核心命题横幅、4 张可点击跳转的分镜卡片与核心洞察铭牌在舞台下方纵向排列，支持流畅上下滑动阅读。
+    4. **底部固定双行提词器**：卡拉 OK 字幕悬浮固定于屏幕底部，支持最多 2 行自动折行显示。
+- **离线录制模式（`?export=1`）**：画布自动锁定为标准 `1920px × 1080px` 广播级分辨率。
 
 ---
 
