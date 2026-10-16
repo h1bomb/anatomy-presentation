@@ -174,13 +174,26 @@ export const IsometricStage: React.FC<IsometricStageProps> = ({
         const win = iframe.contentWindow as any;
         if (!doc || !win) return;
 
-        // Sync theme to iframe
+        // Sync theme and transparency to iframe
+        const paperBg = theme === "light" ? "#f5f4ef" : "#111110";
+        const cardBg = theme === "light" ? "#ffffff" : "#111110";
+        doc.documentElement.setAttribute("data-theme", theme);
+        doc.documentElement.style.setProperty("color-scheme", "normal", "important");
+        doc.documentElement.style.setProperty("background", "transparent", "important");
+        doc.documentElement.style.setProperty("--anatomy-paper", paperBg, "important");
+        doc.documentElement.style.setProperty("--anatomy-card", cardBg, "important");
         if (doc.body) {
           doc.body.setAttribute("data-theme", theme);
-          const paperBg = theme === "light" ? "#f5f4ef" : "#111110";
-          doc.documentElement.style.setProperty("--anatomy-paper", paperBg);
-          doc.documentElement.style.setProperty("--anatomy-card", paperBg);
+          doc.body.style.setProperty("color-scheme", "normal", "important");
+          doc.body.style.setProperty("background", "transparent", "important");
+          doc.body.style.setProperty("--anatomy-paper", paperBg, "important");
+          doc.body.style.setProperty("--anatomy-card", cardBg, "important");
         }
+        doc.querySelectorAll<HTMLElement>(".iso-plate, .rp-card, .td-card").forEach((el) => {
+          el.style.setProperty("--anatomy-paper", paperBg, "important");
+          el.style.setProperty("--anatomy-card", cardBg, "important");
+          el.style.setProperty("background", "transparent", "important");
+        });
 
         if (isExportMode && typeof win.__brollDrive === "function") {
           win.__brollDrive(activeBeat.stageCue, clampedTime, beatProgress, dtMs);

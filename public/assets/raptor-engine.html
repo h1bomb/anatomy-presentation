@@ -107,12 +107,13 @@
 @media (prefers-reduced-motion:reduce){.iso-line[data-flow],.iso-dots circle[data-pulse]{animation:none}}
 
 *{box-sizing:border-box}
-html{color-scheme:dark}
-body[data-theme="light"]{color-scheme:light}
+html{color-scheme:normal}
+html[data-theme="light"],body[data-theme="light"]{color-scheme:light}
 body{margin:0;background:var(--anatomy-page);color:var(--anatomy-text);font:14px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .iso-page{width:min(980px,100% - 32px);margin:64px auto 96px}
 </style><style id="broll-stage-patch">
 html, body, body.iso {
+  color-scheme: normal !important;
   background: transparent !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -140,8 +141,14 @@ html, body, body.iso {
   box-shadow: none !important;
   border: none !important;
   padding: 16px !important;
-  --anatomy-paper: #111110 !important;
-  --anatomy-card: #111110 !important;
+  --anatomy-paper: #111110;
+  --anatomy-card: #111110;
+}
+html[data-theme="light"] .iso-plate,
+body[data-theme="light"] .iso-plate,
+[data-theme="light"] .iso-plate {
+  --anatomy-paper: #f5f4ef !important;
+  --anatomy-card: #ffffff !important;
 }
 .iso-plate-corners, .iso-legend, .rp-bar, .rp-parts, .rt-bar, .ac-bar, .td-bar, figcaption {
   display: none !important;
