@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CHAPTERS, t, tList } from "../src/data/chapters.ts";
-import { resolveVoice, stopSpeech, playSpeech, unlockSpeechSynthesis, playAudioChime } from "../src/utils/speech.ts";
+import {
+  getAudioElement,
+  playAudioChime,
+  playSpeech,
+  resolveVoice,
+  stopSpeech,
+  unlockSpeechSynthesis,
+} from "../src/utils/speech.ts";
 
 test("Every chapter has complete bilingual copy (Chinese & English)", () => {
   assert.equal(CHAPTERS.length, 15);
@@ -38,25 +45,162 @@ test("Every chapter has complete bilingual copy (Chinese & English)", () => {
   }
 });
 
-test("Speech synthesis utility methods execute without throwing in server/headless environments", () => {
-  assert.doesNotThrow(() => {
-    playAudioChime();
-  });
+test("Speech synthesis utility methods execute safely in server/headless environments", () => {
+  assert.doesNotThrow(() => playAudioChime());
+  assert.doesNotThrow(() => unlockSpeechSynthesis());
+  assert.doesNotThrow(() => stopSpeech());
+  assert.equal(getAudioElement(), null);
 
-  assert.doesNotThrow(() => {
+  assert.equal(resolveVoice("zh"), null);
+  assert.equal(resolveVoice("en"), null);
+  assert.equal(playSpeech("测试解说", "zh"), false);
+});
+
+test("Studio audio narrator handles playback, .m4a -> .mp3 fallback, and rapid switching without browser TTS", async () => {
+  let cancelCount = 0;
+  let playBehavior: () => Promise<void> = () => Promise.resolve();
+
+  const mockAudio: any = {
+    id: "",
+    preload: "",
+    src: "",
+    style: {},
+    paused: true,
+    onplay: null as null | (() => void),
+    onended: null as null | (() => void),
+    onerror: null as null | ((e: any) => void),
+    setAttribute() {},
+    pause() {
+      this.paused = true;
+    },
+    play() {
+      this.paused = false;
+      return playBehavior();
+    },
+  };
+
+  class MockAudioContext {
+    state = "suspended";
+    currentTime = 0;
+    destination = {};
+    resume() {
+      this.state = "running";
+      return Promise.resolve();
+    }
+    createOscillator() {
+      return {
+        type: "sine",
+        frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
+        connect() {},
+        start() {},
+        stop() {},
+      };
+    }
+    createGain() {
+      return {
+        gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} },
+        connect() {},
+      };
+    }
+  }
+
+  const prevWindow = (globalThis as any).window;
+  const prevDocument = (globalThis as any).document;
+
+  (globalThis as any).window = {
+    AudioContext: MockAudioContext,
+    speechSynthesis: {
+      cancel() {
+        cancelCount++;
+      },
+    },
+  };
+
+  (globalThis as any).document = {
+    getElementById: () => null,
+    createElement: (tag: string) => {
+      assert.equal(tag, "audio");
+      return mockAudio;
+    },
+    body: {
+      appendChild() {},
+    },
+  };
+
+  try {
+    // 1. Unlock audio and verify singleton creation + browser TTS cancellation
     unlockSpeechSynthesis();
-  });
+    assert.equal((globalThis as any).window.__speechUnlocked, true);
+    assert.ok(cancelCount >= 1);
 
-  assert.doesNotThrow(() => {
+    const el = getAudioElement();
+    assert.equal(el, mockAudio);
+    assert.equal(mockAudio.id, "anatomy-audio-narrator");
+
+    // 2. Empty text or missing chapterId/beatIndex returns false
+    assert.equal(playSpeech("   ", "zh"), false);
+    assert.equal(playSpeech("有效文本但无章节参数", "zh"), false);
+
+    // 3. Normal playback (.m4a) triggers onStart and onEnd
+    let started = 0;
+    let ended = 0;
+    const ok = playSpeech(
+      "先看一个东西。",
+      "zh",
+      () => started++,
+      () => ended++,
+      undefined,
+      "ch01",
+      0
+    );
+    assert.equal(ok, true);
+    assert.equal(mockAudio.src, "/audio/zh/ch01_0.m4a");
+    mockAudio.onplay?.();
+    mockAudio.onended?.();
+    assert.equal(started, 1);
+    assert.equal(ended, 1);
+
+    // 4. .m4a onerror falls back to .mp3, and .mp3 onerror invokes onError
+    let errorCaught = 0;
+    playSpeech(
+      "Press the S key.",
+      "en",
+      undefined,
+      undefined,
+      () => errorCaught++,
+      "ch01",
+      1
+    );
+    assert.equal(mockAudio.src, "/audio/en/ch01_1.m4a");
+    mockAudio.onerror?.(new Error("m4a load error"));
+    assert.equal(mockAudio.src, "/audio/en/ch01_1.mp3");
+    mockAudio.onerror?.(new Error("mp3 load error"));
+    assert.equal(errorCaught, 1);
+
+    // 5. Rejected play() promise falls back from .m4a to .mp3, and ignores AbortError
+    let rejectCount = 0;
+    playBehavior = () => {
+      rejectCount++;
+      if (rejectCount === 1) {
+        return Promise.reject(new Error("NotSupportedError"));
+      }
+      const abortErr = new Error("Aborted");
+      abortErr.name = "AbortError";
+      return Promise.reject(abortErr);
+    };
+
+    playSpeech("Fallback promise test", "en", undefined, undefined, undefined, "ch02", 2);
+    await new Promise((r) => setTimeout(r, 15));
+    assert.equal(mockAudio.src, "/audio/en/ch02_2.mp3");
+
+    // 6. Stop speech clears handlers and pauses audio
     stopSpeech();
-  });
-
-  const zhVoice = resolveVoice("zh");
-  const enVoice = resolveVoice("en");
-  // In Node.js environment without window.speechSynthesis, returns null safely
-  assert.equal(zhVoice, null);
-  assert.equal(enVoice, null);
-
-  const played = playSpeech("测试解说", "zh");
-  assert.equal(played, false);
+    assert.equal(mockAudio.paused, true);
+    assert.equal(mockAudio.onplay, null);
+    assert.equal(mockAudio.onended, null);
+    assert.equal(mockAudio.onerror, null);
+  } finally {
+    (globalThis as any).window = prevWindow;
+    (globalThis as any).document = prevDocument;
+  }
 });
